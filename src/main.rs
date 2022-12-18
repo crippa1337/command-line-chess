@@ -9,7 +9,7 @@ fn main() {
 }
 
 fn clear_screen() {
-    print!("{}[2J", 27 as char);
+    print!("\x1B[2J\x1B[1;1H");
 }
 
 fn player_input(board: &mut Board) {
@@ -36,20 +36,20 @@ fn player_input(board: &mut Board) {
             continue;
         }
 
-        if board.tiles[from.1][from.0].piece.piece_type == Type::Empty {
+        if board.tiles[from.0][from.1].piece.piece_type == Type::Empty {
             input_error(Error::Empty);
             continue;
         }
 
-        if board.tiles[from.1][from.0].piece.colour != Colour::White {
+        if board.tiles[from.0][from.1].piece.colour != Colour::White {
             input_error(Error::Color);
             continue;
         }
 
-        board.tiles[to.1][to.0].piece = board.tiles[from.1][from.0].piece;
-        board.tiles[from.1][from.0].piece.piece_type = Type::Empty;
+        board.tiles[to.0][to.1].piece = board.tiles[from.0][from.1].piece;
+        board.tiles[from.0][from.1].piece.piece_type = Type::Empty;
+        clear_screen();
         board.draw_board();
-        break 'initial;
     }
 }
 
@@ -251,7 +251,6 @@ impl Board {
         }
 
         // Initialize the pieces
-
         // Pawns
         for (col_id, tile) in board[1].iter_mut().enumerate() {
             tile.piece = Piece {
@@ -372,7 +371,7 @@ impl Board {
                 match tile.piece.piece_type {
                     Type::Empty => match tile.colour {
                         Colour::Black => print!("{}", brown.paint("·")),
-                        Colour::White => print!("·"),
+                        Colour::White => print!("{}", White.paint("·")),
                     },
                     Type::Pawn => match tile.piece.colour {
                         Colour::Black => print!("{}", brown.bold().paint("♙")),
