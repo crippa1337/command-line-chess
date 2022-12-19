@@ -77,33 +77,65 @@ pub fn legal_pawn_moves(
     is_white: bool,
 ) -> Vec<(usize, usize)> {
     let mut legal_moves: Vec<(usize, usize)> = Vec::new();
+    let mut possible_moves: Vec<(usize, usize)> = Vec::new();
 
-    // If pawn hasn't moved, allow 2 tiles forward
-    if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(false) {
+    if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(true) {
         if is_white {
-            if board.tiles[from.0 - 1][from.1].piece.piece_type == Type::Empty {
-                legal_moves.push((from.0 - 1, from.1));
-                if board.tiles[from.0 - 2][from.1].piece.piece_type == Type::Empty {
-                    legal_moves.push((from.0 - 2, from.1));
-                }
-            }
+            possible_moves.push((from.0.wrapping_sub(1), from.1));
+            possible_moves.push((from.0.wrapping_sub(2), from.1));
         } else {
-            if board.tiles[from.0 + 1][from.1].piece.piece_type == Type::Empty {
-                legal_moves.push((from.0 + 1, from.1));
-                if board.tiles[from.0 + 2][from.1].piece.piece_type == Type::Empty {
-                    legal_moves.push((from.0 + 2, from.1));
-                }
-            }
+            possible_moves.push((from.0.wrapping_add(1), from.1));
+            possible_moves.push((from.0.wrapping_add(2), from.1));
         }
-        // If pawn has moved, allow 1 tile forward
-    } else if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(true) {
+    } else if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(false) {
         if is_white {
-            if board.tiles[from.0 - 1][from.1].piece.piece_type == Type::Empty {
-                legal_moves.push((from.0 - 1, from.1));
+            possible_moves.push((from.0.wrapping_sub(1), from.1));
+        } else {
+            possible_moves.push((from.0.wrapping_add(1), from.1));
+        }
+    }
+
+    for m in possible_moves {
+        // if any of the moves are wrapping, they are illegal
+        if m.0 > 7 || m.0 > 7 || m.1 > 7 || m.1 > 7 {
+            continue;
+        }
+
+        if board.tiles[m.0][m.1].piece.piece_type == Type::Empty {
+            legal_moves.push(m);
+        }
+
+        if is_white {
+            if m.1 > 0 {
+                if board.tiles[m.0][m.1.wrapping_sub(1)].piece.piece_type != Type::Empty
+                    && board.tiles[m.0][m.1.wrapping_sub(1)].piece.colour == Colour::Black
+                {
+                    legal_moves.push((m.0, m.1.wrapping_sub(1)));
+                }
+            }
+
+            if m.1 < 7 {
+                if board.tiles[m.0][m.1.wrapping_add(1)].piece.piece_type != Type::Empty
+                    && board.tiles[m.0][m.1.wrapping_add(1)].piece.colour == Colour::Black
+                {
+                    legal_moves.push((m.0, m.1.wrapping_add(1)));
+                }
             }
         } else {
-            if board.tiles[from.0 + 1][from.1].piece.piece_type == Type::Empty {
-                legal_moves.push((from.0 + 1, from.1));
+            if m.1 > 0 {
+                if board.tiles[m.0][m.1.wrapping_sub(1)].piece.piece_type != Type::Empty
+                    && board.tiles[m.0][m.1.wrapping_sub(1)].piece.colour == Colour::White
+                {
+                    legal_moves.push((m.0, m.1.wrapping_sub(1)));
+                }
+            }
+
+            if m.1 < 7 {
+                if board.tiles[m.0][m.1.wrapping_add(1)].piece.piece_type != Type::Empty
+                    && board.tiles[m.0][m.1.wrapping_add(1)].piece.colour == Colour::White
+                {
+                    legal_moves.push((m.0, m.1.wrapping_add(1)));
+                }
             }
         }
     }
