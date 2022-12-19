@@ -246,6 +246,25 @@ fn clear_draw(board: &mut Board) {
     board.draw_board();
 }
 
+fn legal_straight_moves(board: &mut Board, from: (usize, usize)) {
+    let init = (from.0, from.1);
+    let (mut up, mut down, mut left, mut right) = (init, init, init, init);
+    let mut stop_checks = 0;
+    let mut legal_moves: Vec<(usize, usize)> = Vec::new();
+
+    while stop_checks < 4 {
+        up.1 -= 1;
+        down.1 += 1;
+        left.0 -= 1;
+        right.0 += 1;
+
+        // If the board tile is empty and is NOT the origin tile, let that "to tile" be legal
+        if board.tiles[up.0][up.1].piece.piece_type == Type::Empty && up != init {
+            legal_moves.push(up)
+        };
+    }
+}
+
 struct Board {
     tiles: [[Tile; 8]; 8],
 }
