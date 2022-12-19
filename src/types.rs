@@ -10,7 +10,7 @@ impl Board {
         let mut board = [[Tile {
             piece: Piece {
                 piece_type: Type::Empty,
-                colour: Colour::Black,
+                colour: Colour::White,
             },
             colour: Colour::White,
         }; 8]; 8];

@@ -7,12 +7,20 @@ use types::*;
 
 fn main() {
     let mut board = Board::new();
+    arrow_print("Welcome to C-Chess!");
+
+    stdin().read_line(&mut String::new()).unwrap();
+
     clear_draw(&mut board);
     player_input(&mut board);
 }
 
 fn clear_screen() {
     print!("\x1B[2J\x1B[1;1H");
+}
+
+fn arrow_print(text: &str) {
+    println!("{} {}", RGB(80, 80, 80).bold().paint(">>>"), text);
 }
 
 fn player_input(board: &mut Board) {
@@ -66,7 +74,7 @@ fn player_input(board: &mut Board) {
         let legal_moves = legal_moves(board, from, true);
         if legal_moves.contains(&to) {
             move_piece(board, from, to);
-            clear_draw(board);
+            board.draw_board()
         } else {
             clear_draw(board);
             input_error(Error::IllegalMove);
