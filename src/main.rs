@@ -74,7 +74,7 @@ fn player_input(board: &mut Board) {
         let legal_moves = legal_moves(board, from, true);
         if legal_moves.contains(&to) {
             move_piece(board, from, to);
-            board.draw_board()
+            clear_draw(board);
         } else {
             clear_draw(board);
             input_error(Error::IllegalMove);
