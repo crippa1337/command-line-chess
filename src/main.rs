@@ -1,10 +1,10 @@
 use std::io::{stdin, Write};
 
-use ansi_term::Colour::{Fixed, Red, White, RGB};
+use ansi_term::Colour::{Red, White, RGB};
 
 fn main() {
     let mut board = Board::new();
-    board.draw_board();
+    clear_draw(&mut board);
     player_input(&mut board);
 }
 
@@ -25,6 +25,7 @@ fn player_input(board: &mut Board) {
         }
 
         if input.len() != 4 {
+            clear_draw(board);
             input_error(Error::Length);
             continue;
         }
@@ -32,24 +33,32 @@ fn player_input(board: &mut Board) {
         let (from, to) = match_input(input);
 
         if from.0 == 99 || from.1 == 99 || to.0 == 99 || to.1 == 99 {
+            clear_draw(board);
             input_error(Error::OutOfBounds);
             continue;
         }
 
         if board.tiles[from.0][from.1].piece.piece_type == Type::Empty {
+            clear_draw(board);
             input_error(Error::Empty);
             continue;
         }
 
         if board.tiles[from.0][from.1].piece.colour != Colour::White {
-            input_error(Error::Color);
+            clear_draw(board);
+            input_error(Error::EnemyMove);
+            continue;
+        }
+
+        if board.tiles[to.0][to.1].piece.colour == Colour::White {
+            clear_draw(board);
+            input_error(Error::TeamDmg);
             continue;
         }
 
         board.tiles[to.0][to.1].piece = board.tiles[from.0][from.1].piece;
         board.tiles[from.0][from.1].piece.piece_type = Type::Empty;
-        clear_screen();
-        board.draw_board();
+        clear_draw(board);
     }
 }
 
@@ -215,16 +224,26 @@ fn input_error(error: Error) {
         Error::Length => println!(
             "{} {}",
             Red.bold().paint(">>>"),
-            "Your input needs to be 5 chars long!"
+            "Your input needs to be 4 chars long!"
         ),
-        Error::InvalidMove => println!("{} {}", Red.bold().paint(">>>"), "Invalid move!"),
-        Error::OutOfBounds => println!("{} {}", Red.bold().paint(">>>"), "Out of bounds!"),
-        Error::Color => println!(
+        Error::IllegalMove => println!("{} {}", Red.bold().paint(">>>"), "Illegal move!"),
+        Error::OutOfBounds => println!("{} {}", Red.bold().paint(">>>"), "Invalid choice!"),
+        Error::EnemyMove => println!(
             "{} {}",
             Red.bold().paint(">>>"),
             "You can't move your opponent's piece!"
         ),
+        Error::TeamDmg => println!(
+            "{} {}",
+            Red.bold().paint(">>>"),
+            "You cannot attack your own piece!"
+        ),
     }
+}
+
+fn clear_draw(board: &mut Board) {
+    clear_screen();
+    board.draw_board();
 }
 
 struct Board {
@@ -439,7 +458,8 @@ enum Colour {
 enum Error {
     Length,
     Empty,
-    InvalidMove,
+    IllegalMove,
     OutOfBounds,
-    Color,
+    EnemyMove,
+    TeamDmg,
 }
