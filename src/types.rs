@@ -140,7 +140,9 @@ impl Board {
     pub fn draw_board(&self) {
         let grey = RGB(80, 80, 80);
         let brown = Red;
-        for (row_id, row) in self.tiles.iter().enumerate() {
+        let mut row_id = 8;
+        for row in self.tiles.iter() {
+            row_id -= 1;
             print!(
                 "{}\n {}  ",
                 grey.paint("    +---+---+---+---+---+---+---+---+"),
