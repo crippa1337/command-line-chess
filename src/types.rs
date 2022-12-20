@@ -1,5 +1,6 @@
 use ansi_term::Colour::{Red, White, RGB};
 
+#[derive(Clone, Copy)]
 pub struct Board {
     pub tiles: [[Tile; 8]; 8],
 }
@@ -192,7 +193,7 @@ pub struct Piece {
     pub colour: Colour,
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Type {
     Empty,
     Pawn(bool),
@@ -216,4 +217,5 @@ pub enum Error {
     OutOfBounds,
     EnemyMove,
     TeamDmg,
+    Check,
 }

@@ -1,37 +1,5 @@
 use crate::*;
 
-// pub fn get_all_pieces(board: &mut Board, is_white: bool) -> Vec<(usize, usize)> {
-//     let mut pieces: Vec<(usize, usize)> = Vec::new();
-
-//     for (row_id, row) in board.tiles.iter().enumerate() {
-//         for (col_id, tile) in row.iter().enumerate() {
-//             if tile.piece.colour == Colour::White && is_white {
-//                 pieces.push((row_id, col_id));
-//             } else if tile.piece.colour == Colour::Black && !is_white {
-//                 pieces.push((row_id, col_id));
-//             }
-//         }
-//     }
-
-//     return pieces;
-// }
-
-// pub fn all_legal_moves(board: &mut Board, is_white: bool) -> Vec<((usize, usize), (usize, usize))> {
-//     let mut legal_move_list: Vec<((usize, usize), (usize, usize))> = Vec::new();
-
-//     let pieces = get_all_pieces(board, is_white);
-
-//     for piece in pieces {
-//         let moves = legal_moves(board, piece, is_white);
-
-//         for m in moves {
-//             legal_move_list.push((piece, m));
-//         }
-//     }
-
-//     return legal_move_list;
-// }
-
 pub fn legal_moves(board: &mut Board, from: (usize, usize), is_white: bool) -> Vec<(usize, usize)> {
     let mut legal_moves: Vec<(usize, usize)> = Vec::new();
 
@@ -61,14 +29,31 @@ pub fn legal_moves(board: &mut Board, from: (usize, usize), is_white: bool) -> V
     return legal_moves;
 }
 
-pub fn move_piece(board: &mut Board, from: (usize, usize), to: (usize, usize)) {
+pub fn move_piece(board: &mut Board, from: (usize, usize), to: (usize, usize), is_white: bool) {
     board.tiles[to.0][to.1].piece = board.tiles[from.0][from.1].piece;
 
+    // Pawn has moved -> true if false
     if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(false) {
         board.tiles[to.0][to.1].piece.piece_type = Type::Pawn(true);
     }
 
     board.tiles[from.0][from.1].piece.piece_type = Type::Empty;
+
+    // Pawn swap at edge
+    if is_white {
+        if board.tiles[to.0][to.1].piece.piece_type == Type::Pawn(true) {
+            if to.0 == 0 || to.0 == 7 {
+                clear_draw(board);
+                pawn_swap(board, to);
+            }
+        }
+    } else {
+        if board.tiles[to.0][to.1].piece.piece_type == Type::Pawn(true) {
+            if to.0 == 0 || to.0 == 7 {
+                board.tiles[to.0][to.1].piece.piece_type = Type::Queen;
+            }
+        }
+    }
 }
 
 pub fn legal_pawn_moves(
@@ -79,7 +64,7 @@ pub fn legal_pawn_moves(
     let mut legal_moves: Vec<(usize, usize)> = Vec::new();
     let mut possible_moves: Vec<(usize, usize)> = Vec::new();
 
-    if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(true) {
+    if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(false) {
         if is_white {
             possible_moves.push((from.0.wrapping_sub(1), from.1));
             possible_moves.push((from.0.wrapping_sub(2), from.1));
@@ -87,7 +72,7 @@ pub fn legal_pawn_moves(
             possible_moves.push((from.0.wrapping_add(1), from.1));
             possible_moves.push((from.0.wrapping_add(2), from.1));
         }
-    } else if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(false) {
+    } else if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(true) {
         if is_white {
             possible_moves.push((from.0.wrapping_sub(1), from.1));
         } else {
@@ -141,6 +126,48 @@ pub fn legal_pawn_moves(
     }
 
     return legal_moves;
+}
+
+pub fn pawn_swap(board: &mut Board, to: (usize, usize)) {
+    let green = RGB(50, 150, 50);
+    loop {
+        println!(
+            "{} What do you want to convert your pawn at {} to?\n{}",
+            green.paint(">>>"),
+            green.paint(reverse_match_input(to)),
+            green.paint("(1) Queen\n(2) Knight\n(3) Bishop\n(4) Rook")
+        );
+
+        print!("{} ", ">>>");
+        std::io::stdout().flush().unwrap();
+        let mut input = String::new();
+        stdin().read_line(&mut input).unwrap();
+        input = input.trim().to_lowercase();
+
+        match input.as_str() {
+            "1" => {
+                board.tiles[to.0][to.1].piece.piece_type = Type::Queen;
+                break;
+            }
+            "2" => {
+                board.tiles[to.0][to.1].piece.piece_type = Type::Knight;
+                break;
+            }
+            "3" => {
+                board.tiles[to.0][to.1].piece.piece_type = Type::Bishop;
+                break;
+            }
+            "4" => {
+                board.tiles[to.0][to.1].piece.piece_type = Type::Rook;
+                break;
+            }
+            _ => {
+                clear_draw(board);
+                input_error(Error::OutOfBounds);
+                continue;
+            }
+        }
+    }
 }
 
 pub fn legal_straight_moves(

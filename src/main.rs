@@ -19,7 +19,7 @@ fn clear_screen() {
     print!("\x1B[2J\x1B[1;1H");
 }
 
-fn arrow_print(text: &str) {
+pub fn arrow_print(text: &str) {
     println!("{} {}", RGB(80, 80, 80).bold().paint(">>>"), text);
 }
 
@@ -73,7 +73,7 @@ fn player_input(board: &mut Board) {
 
         let legal_moves = legal_moves(board, from, true);
         if legal_moves.contains(&to) {
-            move_piece(board, from, to);
+            move_piece(board, from, to, true);
             clear_draw(board);
         } else {
             clear_draw(board);
@@ -235,7 +235,80 @@ fn match_input(input: String) -> ((usize, usize), (usize, usize)) {
     return (from, to);
 }
 
-fn input_error(error: Error) {
+pub fn reverse_match_input(input: (usize, usize)) -> String {
+    let mut output = String::new();
+    match input {
+        (0, 0) => output.push_str("a1"),
+        (1, 0) => output.push_str("a2"),
+        (2, 0) => output.push_str("a3"),
+        (3, 0) => output.push_str("a4"),
+        (4, 0) => output.push_str("a5"),
+        (5, 0) => output.push_str("a6"),
+        (6, 0) => output.push_str("a7"),
+        (7, 0) => output.push_str("a8"),
+        (0, 1) => output.push_str("b1"),
+        (1, 1) => output.push_str("b2"),
+        (2, 1) => output.push_str("b3"),
+        (3, 1) => output.push_str("b4"),
+        (4, 1) => output.push_str("b5"),
+        (5, 1) => output.push_str("b6"),
+        (6, 1) => output.push_str("b7"),
+        (7, 1) => output.push_str("b8"),
+        (0, 2) => output.push_str("c1"),
+        (1, 2) => output.push_str("c2"),
+        (2, 2) => output.push_str("c3"),
+        (3, 2) => output.push_str("c4"),
+        (4, 2) => output.push_str("c5"),
+        (5, 2) => output.push_str("c6"),
+        (6, 2) => output.push_str("c7"),
+        (7, 2) => output.push_str("c8"),
+        (0, 3) => output.push_str("d1"),
+        (1, 3) => output.push_str("d2"),
+        (2, 3) => output.push_str("d3"),
+        (3, 3) => output.push_str("d4"),
+        (4, 3) => output.push_str("d5"),
+        (5, 3) => output.push_str("d6"),
+        (6, 3) => output.push_str("d7"),
+        (7, 3) => output.push_str("d8"),
+        (0, 4) => output.push_str("e1"),
+        (1, 4) => output.push_str("e2"),
+        (2, 4) => output.push_str("e3"),
+        (3, 4) => output.push_str("e4"),
+        (4, 4) => output.push_str("e5"),
+        (5, 4) => output.push_str("e6"),
+        (6, 4) => output.push_str("e7"),
+        (7, 4) => output.push_str("e8"),
+        (0, 5) => output.push_str("f1"),
+        (1, 5) => output.push_str("f2"),
+        (2, 5) => output.push_str("f3"),
+        (3, 5) => output.push_str("f4"),
+        (4, 5) => output.push_str("f5"),
+        (5, 5) => output.push_str("f6"),
+        (6, 5) => output.push_str("f7"),
+        (7, 5) => output.push_str("f8"),
+        (0, 6) => output.push_str("g1"),
+        (1, 6) => output.push_str("g2"),
+        (2, 6) => output.push_str("g3"),
+        (3, 6) => output.push_str("g4"),
+        (4, 6) => output.push_str("g5"),
+        (5, 6) => output.push_str("g6"),
+        (6, 6) => output.push_str("g7"),
+        (7, 6) => output.push_str("g8"),
+        (0, 7) => output.push_str("h1"),
+        (1, 7) => output.push_str("h2"),
+        (2, 7) => output.push_str("h3"),
+        (3, 7) => output.push_str("h4"),
+        (4, 7) => output.push_str("h5"),
+        (5, 7) => output.push_str("h6"),
+        (6, 7) => output.push_str("h7"),
+        (7, 7) => output.push_str("h8"),
+        _ => output.push_str("ERR"),
+    }
+
+    return output;
+}
+
+pub fn input_error(error: Error) {
     match error {
         Error::Empty => println!(
             "{} {}",
@@ -258,6 +331,12 @@ fn input_error(error: Error) {
             "{} {}",
             Red.bold().paint(">>>"),
             "You cannot attack your own piece!"
+        ),
+
+        Error::Check => println!(
+            "{} {}",
+            Red.bold().paint(">>>"),
+            "You cannot move into check!"
         ),
     }
 }
