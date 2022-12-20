@@ -1,6 +1,6 @@
 use crate::*;
 
-pub fn is_in_check(board: &Board, king_pos: (usize, usize), is_white: bool) -> bool {
+pub fn is_in_check(board: &mut Board, king_pos: (usize, usize), is_white: bool) -> bool {
     // Find all the positions of the opponent's pieces
     let mut opponent_positions = Vec::new();
     for i in 0..8 {
@@ -20,7 +20,7 @@ pub fn is_in_check(board: &Board, king_pos: (usize, usize), is_white: bool) -> b
     // Generate all the possible moves for the opponent's pieces
     let mut opponent_moves = Vec::new();
     for pos in opponent_positions {
-        opponent_moves.append(&mut legal_moves(&mut board, pos, !is_white));
+        opponent_moves.append(&mut legal_moves(board, pos, !is_white));
     }
 
     // Check if any of the opponent's moves will capture the king
@@ -67,7 +67,7 @@ pub fn move_piece(
     from: (usize, usize),
     to: (usize, usize),
     is_white: bool,
-) -> bool {
+) -> Result<(), Error> {
     // Make a copy of the board to test the move on
     let mut test_board = board.clone();
 
@@ -75,6 +75,7 @@ pub fn move_piece(
     test_board.tiles[to.0][to.1].piece = test_board.tiles[from.0][from.1].piece;
     test_board.tiles[from.0][from.1].piece.piece_type = Type::Empty;
 
+    // Find the king's position
     let king_pos: (usize, usize);
     if is_white {
         king_pos = board.kingpos_w;
@@ -83,16 +84,26 @@ pub fn move_piece(
     }
 
     // Check if the king is in check after the move
-    if is_in_check(&test_board, king_pos, is_white) {
-        return false;
+    if is_in_check(&mut test_board, king_pos, is_white) {
+        return Err(Error::Check);
     }
 
+    // Actually do the move if king isn't in check
     // Pawn has moved -> true if false
-    if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(false) {
-        board.tiles[to.0][to.1].piece.piece_type = Type::Pawn(true);
+    // King has moved -> new king pos
+    match board.tiles[from.0][from.1].piece.piece_type {
+        Type::King => {
+            if is_white {
+                board.kingpos_w = to;
+            } else {
+                board.kingpos_b = to;
+            }
+        }
+        Type::Pawn(false) => {
+            board.tiles[from.0][from.1].piece.piece_type = Type::Pawn(true);
+        }
+        _ => (),
     }
-
-    // Update the board with the actual move
     board.tiles[to.0][to.1].piece = board.tiles[from.0][from.1].piece;
     board.tiles[from.0][from.1].piece.piece_type = Type::Empty;
 
@@ -112,7 +123,7 @@ pub fn move_piece(
         }
     }
 
-    return true;
+    return Ok(());
 }
 
 pub fn legal_pawn_moves(
@@ -430,5 +441,6 @@ pub fn legal_king_moves(
             legal_move_list.push((possible_move.0 as usize, possible_move.1 as usize));
         }
     }
+
     return legal_move_list;
 }
