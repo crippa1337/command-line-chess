@@ -3,6 +3,8 @@ use ansi_term::Colour::{Red, White, RGB};
 #[derive(Clone, Copy)]
 pub struct Board {
     pub tiles: [[Tile; 8]; 8],
+    pub kingpos_w: (usize, usize),
+    pub kingpos_b: (usize, usize),
 }
 
 impl Board {
@@ -128,7 +130,11 @@ impl Board {
             colour: Colour::White,
         };
 
-        return Board { tiles: board };
+        return Board {
+            tiles: board,
+            kingpos_b: (0, 4),
+            kingpos_w: (7, 4),
+        };
     }
 
     pub fn draw_board(&self) {
