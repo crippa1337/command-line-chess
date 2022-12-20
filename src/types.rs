@@ -193,7 +193,7 @@ pub struct Tile {
     pub colour: Colour,
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Piece {
     pub piece_type: Type,
     pub colour: Colour,

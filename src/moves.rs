@@ -72,15 +72,25 @@ pub fn move_piece(
     let mut test_board = board.clone();
 
     // Make the move on the test board
+    match test_board.tiles[from.0][from.1].piece.piece_type {
+        Type::King => {
+            if is_white {
+                test_board.kingpos_w = to;
+            } else {
+                test_board.kingpos_b = to;
+            }
+        }
+        _ => (),
+    }
     test_board.tiles[to.0][to.1].piece = test_board.tiles[from.0][from.1].piece;
     test_board.tiles[from.0][from.1].piece.piece_type = Type::Empty;
 
-    // Find the king's position
+    // Find the king's position for the next check
     let king_pos: (usize, usize);
     if is_white {
-        king_pos = board.kingpos_w;
+        king_pos = test_board.kingpos_w;
     } else {
-        king_pos = board.kingpos_b;
+        king_pos = test_board.kingpos_b;
     }
 
     // Check if the king is in check after the move
@@ -426,9 +436,6 @@ pub fn legal_king_moves(
         {
             continue;
         }
-
-        // check if king is in check
-        // todo
 
         let tile = &board.tiles[possible_move.0 as usize][possible_move.1 as usize];
         if tile.piece.piece_type == Type::Empty {

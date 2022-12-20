@@ -71,8 +71,8 @@ fn player_input(board: &mut Board) {
             continue;
         }
 
-        let legal_moves = legal_moves(board, from, true);
-        if legal_moves.contains(&to) {
+        let white_moves = legal_moves(board, from, true);
+        if white_moves.contains(&to) {
             match move_piece(board, from, to, true) {
                 Err(e) => {
                     clear_draw(board);
