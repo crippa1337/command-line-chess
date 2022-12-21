@@ -28,14 +28,14 @@ impl Board {
 
         // Initialize the pieces
         // Pawns
-        for (col_id, tile) in board[1].iter_mut().enumerate() {
+        for tile in board[1].iter_mut() {
             tile.piece = Piece {
                 piece_type: Type::Pawn(false),
                 colour: Colour::Black,
             };
         }
 
-        for (col_id, tile) in board[6].iter_mut().enumerate() {
+        for tile in board[6].iter_mut() {
             tile.piece = Piece {
                 piece_type: Type::Pawn(false),
                 colour: Colour::White,
@@ -141,6 +141,7 @@ impl Board {
         let grey = RGB(80, 80, 80);
         let brown = Red;
         let mut row_id = 8;
+        println!("      a   b   c   d   e   f   g   h");
         for row in self.tiles.iter() {
             row_id -= 1;
             print!(

@@ -7,7 +7,9 @@ use types::*;
 
 fn main() {
     let mut board = Board::new();
-    arrow_print("Welcome to C-Chess!");
+    arrow_print("Welcome to C-Chess!", true);
+    arrow_print("Input 'exit' to exit the application at anytime.", false);
+    arrow_print("Hit Enter to continue . . .", true);
 
     stdin().read_line(&mut String::new()).unwrap();
 
@@ -15,16 +17,65 @@ fn main() {
     player_input(&mut board);
 }
 
-fn clear_screen() {
-    print!("\x1B[2J\x1B[1;1H");
-}
-
-pub fn arrow_print(text: &str) {
-    println!("{} {}", RGB(80, 80, 80).bold().paint(">>>"), text);
-}
-
 fn player_input(board: &mut Board) {
-    'initial: loop {
+    loop {
+        // White's turn
+        println!("White's Turn");
+        let (from, to) = handle_player(board, true);
+        let white_moves = legal_moves(board, from, true);
+        if white_moves.contains(&to) {
+            match move_piece(board, from, to, true) {
+                Err(e) => {
+                    clear_draw(board);
+                    input_error(e);
+                    continue;
+                }
+
+                Ok(_) => {
+                    clear_draw(board);
+                }
+            }
+        } else {
+            clear_draw(board);
+            input_error(Error::IllegalMove);
+            continue;
+        }
+
+        // Black's turn
+        println!("Black's Turn");
+        let (from, to) = handle_player(board, false);
+        println!("{from:?} {to:?}");
+        println!("{:?}", board.tiles[from.0][from.1].piece.piece_type);
+        let black_moves = legal_moves(board, from, false);
+        if black_moves.contains(&to) {
+            match move_piece(board, from, to, false) {
+                Err(e) => {
+                    clear_draw(board);
+                    input_error(e);
+                    continue;
+                }
+
+                Ok(_) => {
+                    clear_draw(board);
+                }
+            }
+        } else {
+            clear_draw(board);
+            input_error(Error::IllegalMove);
+            continue;
+        }
+    }
+}
+
+fn handle_player(board: &mut Board, is_white: bool) -> ((usize, usize), (usize, usize)) {
+    let colour;
+    if is_white {
+        colour = Colour::White;
+    } else {
+        colour = Colour::Black;
+    }
+
+    loop {
         print!("{} ", White.bold().paint(">>>"));
         std::io::stdout().flush().unwrap();
         let mut input = String::new();
@@ -55,7 +106,7 @@ fn player_input(board: &mut Board) {
             continue;
         }
 
-        if board.tiles[from.0][from.1].piece.colour != Colour::White
+        if board.tiles[from.0][from.1].piece.colour != colour
             && board.tiles[from.0][from.1].piece.piece_type != Type::Empty
         {
             clear_draw(board);
@@ -63,7 +114,7 @@ fn player_input(board: &mut Board) {
             continue;
         }
 
-        if board.tiles[to.0][to.1].piece.colour == Colour::White
+        if board.tiles[to.0][to.1].piece.colour == colour
             && board.tiles[to.0][to.1].piece.piece_type != Type::Empty
         {
             clear_draw(board);
@@ -71,24 +122,7 @@ fn player_input(board: &mut Board) {
             continue;
         }
 
-        let white_moves = legal_moves(board, from, true);
-        if white_moves.contains(&to) {
-            match move_piece(board, from, to, true) {
-                Err(e) => {
-                    clear_draw(board);
-                    input_error(e);
-                    continue 'initial;
-                }
-
-                Ok(_) => {
-                    clear_draw(board);
-                }
-            }
-        } else {
-            clear_draw(board);
-            input_error(Error::IllegalMove);
-            continue;
-        }
+        return (from, to);
     }
 }
 
@@ -245,76 +279,73 @@ fn match_input(input: String) -> ((usize, usize), (usize, usize)) {
 }
 
 pub fn reverse_match_input(input: (usize, usize)) -> String {
-    let mut output = String::new();
     match input {
-        (0, 0) => output.push_str("a1"),
-        (1, 0) => output.push_str("a2"),
-        (2, 0) => output.push_str("a3"),
-        (3, 0) => output.push_str("a4"),
-        (4, 0) => output.push_str("a5"),
-        (5, 0) => output.push_str("a6"),
-        (6, 0) => output.push_str("a7"),
-        (7, 0) => output.push_str("a8"),
-        (0, 1) => output.push_str("b1"),
-        (1, 1) => output.push_str("b2"),
-        (2, 1) => output.push_str("b3"),
-        (3, 1) => output.push_str("b4"),
-        (4, 1) => output.push_str("b5"),
-        (5, 1) => output.push_str("b6"),
-        (6, 1) => output.push_str("b7"),
-        (7, 1) => output.push_str("b8"),
-        (0, 2) => output.push_str("c1"),
-        (1, 2) => output.push_str("c2"),
-        (2, 2) => output.push_str("c3"),
-        (3, 2) => output.push_str("c4"),
-        (4, 2) => output.push_str("c5"),
-        (5, 2) => output.push_str("c6"),
-        (6, 2) => output.push_str("c7"),
-        (7, 2) => output.push_str("c8"),
-        (0, 3) => output.push_str("d1"),
-        (1, 3) => output.push_str("d2"),
-        (2, 3) => output.push_str("d3"),
-        (3, 3) => output.push_str("d4"),
-        (4, 3) => output.push_str("d5"),
-        (5, 3) => output.push_str("d6"),
-        (6, 3) => output.push_str("d7"),
-        (7, 3) => output.push_str("d8"),
-        (0, 4) => output.push_str("e1"),
-        (1, 4) => output.push_str("e2"),
-        (2, 4) => output.push_str("e3"),
-        (3, 4) => output.push_str("e4"),
-        (4, 4) => output.push_str("e5"),
-        (5, 4) => output.push_str("e6"),
-        (6, 4) => output.push_str("e7"),
-        (7, 4) => output.push_str("e8"),
-        (0, 5) => output.push_str("f1"),
-        (1, 5) => output.push_str("f2"),
-        (2, 5) => output.push_str("f3"),
-        (3, 5) => output.push_str("f4"),
-        (4, 5) => output.push_str("f5"),
-        (5, 5) => output.push_str("f6"),
-        (6, 5) => output.push_str("f7"),
-        (7, 5) => output.push_str("f8"),
-        (0, 6) => output.push_str("g1"),
-        (1, 6) => output.push_str("g2"),
-        (2, 6) => output.push_str("g3"),
-        (3, 6) => output.push_str("g4"),
-        (4, 6) => output.push_str("g5"),
-        (5, 6) => output.push_str("g6"),
-        (6, 6) => output.push_str("g7"),
-        (7, 6) => output.push_str("g8"),
-        (0, 7) => output.push_str("h1"),
-        (1, 7) => output.push_str("h2"),
-        (2, 7) => output.push_str("h3"),
-        (3, 7) => output.push_str("h4"),
-        (4, 7) => output.push_str("h5"),
-        (5, 7) => output.push_str("h6"),
-        (6, 7) => output.push_str("h7"),
-        (7, 7) => output.push_str("h8"),
-        _ => output.push_str("ERR"),
+        (0, 0) => return String::from("a8"),
+        (0, 1) => return String::from("b8"),
+        (0, 2) => return String::from("c8"),
+        (0, 3) => return String::from("d8"),
+        (0, 4) => return String::from("e8"),
+        (0, 5) => return String::from("f8"),
+        (0, 6) => return String::from("g8"),
+        (0, 7) => return String::from("h8"),
+        (1, 0) => return String::from("a7"),
+        (1, 1) => return String::from("b7"),
+        (1, 2) => return String::from("c7"),
+        (1, 3) => return String::from("d7"),
+        (1, 4) => return String::from("e7"),
+        (1, 5) => return String::from("f7"),
+        (1, 6) => return String::from("g7"),
+        (1, 7) => return String::from("h7"),
+        (2, 0) => return String::from("a6"),
+        (2, 1) => return String::from("b6"),
+        (2, 2) => return String::from("c6"),
+        (2, 3) => return String::from("d6"),
+        (2, 4) => return String::from("e6"),
+        (2, 5) => return String::from("f6"),
+        (2, 6) => return String::from("g6"),
+        (2, 7) => return String::from("h6"),
+        (3, 0) => return String::from("a5"),
+        (3, 1) => return String::from("b5"),
+        (3, 2) => return String::from("c5"),
+        (3, 3) => return String::from("d5"),
+        (3, 4) => return String::from("e5"),
+        (3, 5) => return String::from("f5"),
+        (3, 6) => return String::from("g5"),
+        (3, 7) => return String::from("h5"),
+        (4, 0) => return String::from("a4"),
+        (4, 1) => return String::from("b4"),
+        (4, 2) => return String::from("c4"),
+        (4, 3) => return String::from("d4"),
+        (4, 4) => return String::from("e4"),
+        (4, 5) => return String::from("f4"),
+        (4, 6) => return String::from("g4"),
+        (4, 7) => return String::from("h4"),
+        (5, 0) => return String::from("a3"),
+        (5, 1) => return String::from("b3"),
+        (5, 2) => return String::from("c3"),
+        (5, 3) => return String::from("d3"),
+        (5, 4) => return String::from("e3"),
+        (5, 5) => return String::from("f3"),
+        (5, 6) => return String::from("g3"),
+        (5, 7) => return String::from("h3"),
+        (6, 0) => return String::from("a2"),
+        (6, 1) => return String::from("b2"),
+        (6, 2) => return String::from("c2"),
+        (6, 3) => return String::from("d2"),
+        (6, 4) => return String::from("e2"),
+        (6, 5) => return String::from("f2"),
+        (6, 6) => return String::from("g2"),
+        (6, 7) => return String::from("h2"),
+        (7, 0) => return String::from("a1"),
+        (7, 1) => return String::from("b1"),
+        (7, 2) => return String::from("c1"),
+        (7, 3) => return String::from("d1"),
+        (7, 4) => return String::from("e1"),
+        (7, 5) => return String::from("f1"),
+        (7, 6) => return String::from("g1"),
+        (7, 7) => return String::from("h1"),
+        _ => return String::from("ERR"),
     }
-
-    return output;
 }
 
 pub fn input_error(error: Error) {
@@ -353,4 +384,20 @@ pub fn input_error(error: Error) {
 fn clear_draw(board: &mut Board) {
     clear_screen();
     board.draw_board();
+}
+
+fn clear_screen() {
+    print!("\x1B[2J\x1B[1;1H");
+}
+
+fn arrow_print(text: &str, bold: bool) {
+    if bold {
+        println!(
+            "{} {}",
+            RGB(80, 80, 80).bold().paint(">>>"),
+            White.bold().paint(text)
+        );
+    } else {
+        println!("{} {}", RGB(80, 80, 80).paint(">>>"), text);
+    }
 }

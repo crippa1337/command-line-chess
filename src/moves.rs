@@ -5,6 +5,11 @@ pub fn is_in_check(board: &mut Board, king_pos: (usize, usize), is_white: bool) 
     let mut opponent_positions = Vec::new();
     for i in 0..8 {
         for j in 0..8 {
+            // Do not check empty tiles
+            if board.tiles[i][j].piece.piece_type == Type::Empty {
+                continue;
+            }
+
             if is_white {
                 if board.tiles[i][j].piece.colour == Colour::Black {
                     opponent_positions.push((i, j));
@@ -20,6 +25,7 @@ pub fn is_in_check(board: &mut Board, king_pos: (usize, usize), is_white: bool) 
     // Generate all the possible moves for the opponent's pieces
     let mut opponent_moves = Vec::new();
     for pos in opponent_positions {
+        println!("pos: {:?}", pos);
         opponent_moves.append(&mut legal_moves(board, pos, !is_white));
     }
 
@@ -35,6 +41,10 @@ pub fn is_in_check(board: &mut Board, king_pos: (usize, usize), is_white: bool) 
 
 pub fn legal_moves(board: &mut Board, from: (usize, usize), is_white: bool) -> Vec<(usize, usize)> {
     let mut legal_moves: Vec<(usize, usize)> = Vec::new();
+    println!(
+        "Legal moves for {:?} at {:?}",
+        board.tiles[from.0][from.1].piece.piece_type, from
+    );
 
     match board.tiles[from.0][from.1].piece.piece_type {
         Type::Pawn(_) => {
@@ -143,7 +153,9 @@ pub fn legal_pawn_moves(
 ) -> Vec<(usize, usize)> {
     let mut legal_moves: Vec<(usize, usize)> = Vec::new();
     let mut possible_moves: Vec<(usize, usize)> = Vec::new();
+    let mut possible_captures: Vec<(usize, usize)> = Vec::new();
 
+    // Forward moves
     if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(false) {
         if is_white {
             possible_moves.push((from.0.wrapping_sub(1), from.1));
@@ -160,48 +172,33 @@ pub fn legal_pawn_moves(
         }
     }
 
+    // Diagonal attacks
+    if is_white {
+        possible_captures.push((from.0.wrapping_sub(1), from.1.wrapping_sub(1)));
+        possible_captures.push((from.0.wrapping_sub(1), from.1.wrapping_add(1)));
+    } else {
+        possible_captures.push((from.0.wrapping_add(1), from.1.wrapping_sub(1)));
+        possible_captures.push((from.0.wrapping_add(1), from.1.wrapping_add(1)));
+    }
+
     for m in possible_moves {
         // if any of the moves are wrapping, they are illegal
-        if m.0 > 7 || m.0 > 7 || m.1 > 7 || m.1 > 7 {
+        if m.0 > 7 || m.1 > 7 {
             continue;
         }
 
         if board.tiles[m.0][m.1].piece.piece_type == Type::Empty {
             legal_moves.push(m);
         }
+    }
 
-        if is_white {
-            if m.1 > 0 {
-                if board.tiles[m.0][m.1.wrapping_sub(1)].piece.piece_type != Type::Empty
-                    && board.tiles[m.0][m.1.wrapping_sub(1)].piece.colour == Colour::Black
-                {
-                    legal_moves.push((m.0, m.1.wrapping_sub(1)));
-                }
-            }
+    for m in possible_captures {
+        if m.0 > 7 || m.1 > 7 {
+            continue;
+        }
 
-            if m.1 < 7 {
-                if board.tiles[m.0][m.1.wrapping_add(1)].piece.piece_type != Type::Empty
-                    && board.tiles[m.0][m.1.wrapping_add(1)].piece.colour == Colour::Black
-                {
-                    legal_moves.push((m.0, m.1.wrapping_add(1)));
-                }
-            }
-        } else {
-            if m.1 > 0 {
-                if board.tiles[m.0][m.1.wrapping_sub(1)].piece.piece_type != Type::Empty
-                    && board.tiles[m.0][m.1.wrapping_sub(1)].piece.colour == Colour::White
-                {
-                    legal_moves.push((m.0, m.1.wrapping_sub(1)));
-                }
-            }
-
-            if m.1 < 7 {
-                if board.tiles[m.0][m.1.wrapping_add(1)].piece.piece_type != Type::Empty
-                    && board.tiles[m.0][m.1.wrapping_add(1)].piece.colour == Colour::White
-                {
-                    legal_moves.push((m.0, m.1.wrapping_add(1)));
-                }
-            }
+        if board.tiles[m.0][m.1].piece.piece_type != Type::Empty {
+            legal_moves.push(m);
         }
     }
 
