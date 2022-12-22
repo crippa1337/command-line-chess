@@ -5,7 +5,7 @@ Local multiplayer is turn-based multiplayer on one machine.<br>
 Singleplayer will pit you versus a chess engine powered by a minimax algorithm.
 
 # To-do
-- [ ] Checkmates
+- [x] Checkmates
 - [ ] Main menu (choosing singleplayer or multiplayer)
 - [ ] Minimax algorithm for singleplayer
 - [ ] Castling and other "exotic" moves
