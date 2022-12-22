@@ -137,19 +137,39 @@ impl Board {
         };
     }
 
-    pub fn draw_board(&self) {
+    pub fn draw_board(&self, is_white: bool) {
         let grey = RGB(80, 80, 80);
         let brown = Red;
-        let mut row_id = 8;
-        println!("      a   b   c   d   e   f   g   h");
-        for row in self.tiles.iter() {
-            row_id -= 1;
+
+        let mut row_id = if is_white { 8 } else { -1 };
+        if is_white {
+            println!("      a   b   c   d   e   f   g   h");
+        } else {
+            println!("      h   g   f   e   d   c   b   a");
+        }
+        let rows: Vec<&[Tile; 8]> = if is_white {
+            self.tiles.iter().collect()
+        } else {
+            self.tiles.iter().rev().collect()
+        };
+        for row in rows.iter() {
+            if is_white {
+                row_id -= 1;
+            } else {
+                row_id += 1;
+            }
             print!(
                 "{}\n {}  ",
                 grey.paint("    +---+---+---+---+---+---+---+---+"),
                 row_id + 1
             );
-            for &tile in row {
+
+            let tiles: Vec<&Tile> = if is_white {
+                row.iter().collect()
+            } else {
+                row.iter().rev().collect()
+            };
+            for &tile in tiles.iter() {
                 print!("{}", grey.paint("| "));
                 match tile.piece.piece_type {
                     Type::Empty => match tile.colour {
@@ -186,7 +206,11 @@ impl Board {
             println!("{}", grey.paint("|"));
         }
         println!("{}", grey.paint("    +---+---+---+---+---+---+---+---+"));
-        println!("      a   b   c   d   e   f   g   h");
+        if is_white {
+            println!("      a   b   c   d   e   f   g   h");
+        } else {
+            println!("      h   g   f   e   d   c   b   a");
+        }
     }
 }
 

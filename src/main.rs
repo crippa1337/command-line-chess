@@ -1,3 +1,4 @@
+mod cpu;
 mod moves;
 mod types;
 use ansi_term::Colour::{Red, White, RGB};
@@ -12,23 +13,61 @@ fn main() {
     arrow_print("Hit Enter to continue . . .", true);
 
     stdin().read_line(&mut String::new()).unwrap();
+    clear_screen();
 
-    clear_draw(&mut board);
-    game_loop(&mut board);
+    // arrow_print("What difficulty do you want to play at?", true);
+    // arrow_print(
+    //     "The higher the difficulty, the longer the computer will think",
+    //     true,
+    // );
+    // arrow_print(
+    //     "A difficulty higher than 4 will result in long turns!",
+    //     true,
+    // );
+    // arrow_print("1. Easy", false);
+    // arrow_print("2. Medium", false);
+    // arrow_print("3. Hard", false);
+    // arrow_print("4. Impossible", false);
+    // arrow_print("5. Unstoppable", false);
+
+    // let mut difficulty = 0;
+    // loop {
+    //     let mut input = String::new();
+    //     print!("> ");
+    //     std::io::stdout().flush().unwrap();
+    //     stdin().read_line(&mut input).unwrap();
+    //     difficulty = match input.trim().parse::<usize>() {
+    //         Ok(n) => n,
+    //         Err(_) => {
+    //             arrow_print("Invalid input!", true);
+    //             continue;
+    //         }
+    //     };
+
+    //     if difficulty > 5 {
+    //         arrow_print("Invalid input!", true);
+    //         continue;
+    //     }
+
+    //     break;
+    // }
+
+    clear_draw(&mut board, true);
+    mp_game_loop(&mut board);
 }
 
-fn game_loop(board: &mut Board) {
+fn mp_game_loop(board: &mut Board) {
     loop {
         new_turn(board, true);
         if let Some(winner) = check_for_mates(board) {
-            clear_draw(board);
+            clear_draw(board, true);
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
 
         new_turn(board, false);
         if let Some(winner) = check_for_mates(board) {
-            clear_draw(board);
+            clear_draw(board, false);
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
@@ -38,8 +77,13 @@ fn game_loop(board: &mut Board) {
     stdin().read_line(&mut String::new()).unwrap();
 }
 
+fn sp_game_loop(board: &mut Board, difficulty: usize) {
+    loop {}
+}
+
 fn new_turn(board: &mut Board, is_white: bool) {
     loop {
+        clear_draw(board, is_white);
         if is_white {
             println!("White's Turn");
         } else {
@@ -51,29 +95,28 @@ fn new_turn(board: &mut Board, is_white: bool) {
         if white_moves.contains(&to) {
             match move_piece(board, from, to, is_white) {
                 Err(e) => {
-                    clear_draw(board);
+                    clear_draw(board, is_white);
                     input_error(e);
                 }
 
                 Ok(_) => {
-                    clear_draw(board);
+                    clear_draw(board, is_white);
                     return;
                 }
             }
         } else {
-            clear_draw(board);
+            clear_draw(board, is_white);
             input_error(Error::IllegalMove);
         }
     }
 }
 
 fn handle_input(board: &mut Board, is_white: bool) -> ((usize, usize), (usize, usize)) {
-    let colour;
-    if is_white {
-        colour = Colour::White;
+    let colour = if is_white {
+        Colour::White
     } else {
-        colour = Colour::Black;
-    }
+        Colour::Black
+    };
 
     loop {
         print!("{} ", White.bold().paint(">>>"));
@@ -87,7 +130,7 @@ fn handle_input(board: &mut Board, is_white: bool) -> ((usize, usize), (usize, u
         }
 
         if input.len() != 4 {
-            clear_draw(board);
+            clear_draw(board, is_white);
             input_error(Error::Length);
             continue;
         }
@@ -95,13 +138,13 @@ fn handle_input(board: &mut Board, is_white: bool) -> ((usize, usize), (usize, u
         let (from, to) = match_input(input);
 
         if from.0 == 99 || from.1 == 99 || to.0 == 99 || to.1 == 99 {
-            clear_draw(board);
+            clear_draw(board, is_white);
             input_error(Error::OutOfBounds);
             continue;
         }
 
         if board.tiles[from.0][from.1].piece.piece_type == Type::Empty {
-            clear_draw(board);
+            clear_draw(board, is_white);
             input_error(Error::Empty);
             continue;
         }
@@ -109,7 +152,7 @@ fn handle_input(board: &mut Board, is_white: bool) -> ((usize, usize), (usize, u
         if board.tiles[from.0][from.1].piece.colour != colour
             && board.tiles[from.0][from.1].piece.piece_type != Type::Empty
         {
-            clear_draw(board);
+            clear_draw(board, is_white);
             input_error(Error::EnemyMove);
             continue;
         }
@@ -117,7 +160,7 @@ fn handle_input(board: &mut Board, is_white: bool) -> ((usize, usize), (usize, u
         if board.tiles[to.0][to.1].piece.colour == colour
             && board.tiles[to.0][to.1].piece.piece_type != Type::Empty
         {
-            clear_draw(board);
+            clear_draw(board, is_white);
             input_error(Error::TeamDmg);
             continue;
         }
@@ -381,9 +424,9 @@ pub fn input_error(error: Error) {
     }
 }
 
-fn clear_draw(board: &mut Board) {
+fn clear_draw(board: &mut Board, is_white: bool) {
     clear_screen();
-    board.draw_board();
+    board.draw_board(is_white);
 }
 
 fn clear_screen() {

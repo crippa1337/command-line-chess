@@ -1,6 +1,6 @@
-use crate::*;
+use crate::{cpu::get_all_moves, *};
 
-pub fn is_in_check(board: &mut Board, king_pos: (usize, usize), is_white: bool) -> bool {
+pub fn is_in_check(board: &mut Board, is_white: bool) -> bool {
     // Find all the positions of the opponent's pieces
     let mut opponent_positions = Vec::new();
     for i in 0..8 {
@@ -27,6 +27,12 @@ pub fn is_in_check(board: &mut Board, king_pos: (usize, usize), is_white: bool) 
     for pos in opponent_positions {
         opponent_moves.append(&mut legal_moves(board, pos, !is_white));
     }
+
+    let king_pos = if is_white {
+        board.kingpos_w
+    } else {
+        board.kingpos_b
+    };
 
     // Check if any of the opponent's moves will capture the king
     for moves in opponent_moves {
@@ -68,68 +74,81 @@ pub fn legal_moves(board: &mut Board, from: (usize, usize), is_white: bool) -> V
 }
 
 pub fn check_for_mates(board: &mut Board) -> Option<Colour> {
-    // Check if the white king is in check, if it is, create a copy of the board and test all the possible moves from all possible pieces
+    // Check if any kings are in check, if it is, create a copy of the board and test all the possible moves from all possible pieces
     // If none of the moves will remove the king from check, return winner
-    if is_in_check(board, board.kingpos_w, true) {
-        let mut start_board = board.clone();
-        for i in 0..8 {
-            for j in 0..8 {
-                if start_board.tiles[i][j].piece.colour != Colour::White
-                    || start_board.tiles[i][j].piece.piece_type == Type::Empty
-                {
-                    continue;
-                }
+    // Check if white king is in checkmate
+    if is_in_check(board, true) {
+        let moves = get_all_moves(board, true);
+        let mut can_escape_check = false;
 
-                let moves = legal_moves(&mut start_board, (i, j), true);
-                for m in moves {
-                    let mut test_board = start_board.clone();
-                    let king_pos = test_board.kingpos_w;
-                    match move_piece(&mut test_board, (i, j), m, true) {
-                        Ok(_) => {
-                            if !is_in_check(&mut test_board, king_pos, true) {
-                                return None;
-                            }
-                        }
-                        Err(_) => (),
+        for ((from_row, from_col), tos) in moves {
+            for (to_row, to_col) in tos {
+                let mut temp_board = board.clone();
+                match move_piece(
+                    &mut temp_board,
+                    (from_row, from_col),
+                    (to_row, to_col),
+                    true,
+                ) {
+                    Ok(()) => (),
+                    Err(e) => {
+                        continue;
                     }
                 }
+
+                if is_in_check(&mut temp_board, true) {
+                    can_escape_check = true;
+                    break;
+                }
+            }
+
+            if can_escape_check {
+                break;
             }
         }
 
-        return Some(Colour::Black);
+        if !can_escape_check {
+            return Some(Colour::Black);
+        }
     }
 
-    // Same but for the black king
-    if is_in_check(board, board.kingpos_b, false) {
-        let mut start_board = board.clone();
-        for i in 0..8 {
-            for j in 0..8 {
-                if start_board.tiles[i][j].piece.colour != Colour::Black
-                    || start_board.tiles[i][j].piece.piece_type == Type::Empty
-                {
-                    continue;
-                }
+    // Check if black king is in checkmate
+    if is_in_check(board, false) {
+        let moves = get_all_moves(board, false);
+        let mut can_escape_check = false;
 
-                let moves = legal_moves(&mut start_board, (i, j), false);
-                for m in moves {
-                    let mut test_board = start_board.clone();
-                    let king_pos = test_board.kingpos_b;
-                    match move_piece(&mut test_board, (i, j), m, false) {
-                        Ok(_) => {
-                            if !is_in_check(&mut test_board, king_pos, false) {
-                                return None;
-                            }
-                        }
-                        Err(_) => (),
+        for ((from_row, from_col), tos) in moves {
+            for (to_row, to_col) in tos {
+                let mut temp_board = board.clone();
+                match move_piece(
+                    &mut temp_board,
+                    (from_row, from_col),
+                    (to_row, to_col),
+                    false,
+                ) {
+                    Ok(()) => (),
+                    Err(e) => {
+                        continue;
                     }
                 }
+
+                if is_in_check(&mut temp_board, false) {
+                    can_escape_check = true;
+                    break;
+                }
+            }
+
+            if can_escape_check {
+                break;
             }
         }
 
-        return Some(Colour::White);
+        if !can_escape_check {
+            return Some(Colour::White);
+        }
     }
 
-    return None;
+    None
 }
 
 pub fn move_piece(
@@ -155,16 +174,8 @@ pub fn move_piece(
     test_board.tiles[to.0][to.1].piece = test_board.tiles[from.0][from.1].piece;
     test_board.tiles[from.0][from.1].piece.piece_type = Type::Empty;
 
-    // Find the king's position for the next check
-    let king_pos: (usize, usize);
-    if is_white {
-        king_pos = test_board.kingpos_w;
-    } else {
-        king_pos = test_board.kingpos_b;
-    }
-
     // Check if the king is in check after the move
-    if is_in_check(&mut test_board, king_pos, is_white) {
+    if is_in_check(&mut test_board, is_white) {
         return Err(Error::Check);
     }
 
@@ -191,8 +202,7 @@ pub fn move_piece(
     if is_white {
         if board.tiles[to.0][to.1].piece.piece_type == Type::Pawn(true) {
             if to.0 == 0 || to.0 == 7 {
-                clear_draw(board);
-                pawn_swap(board, to);
+                board.tiles[to.0][to.1].piece.piece_type = Type::Queen;
             }
         }
     } else {
@@ -257,7 +267,9 @@ pub fn legal_pawn_moves(
             continue;
         }
 
-        if board.tiles[m.0][m.1].piece.piece_type != Type::Empty {
+        if board.tiles[m.0][m.1].piece.piece_type != Type::Empty
+            && board.tiles[m.0][m.1].piece.colour != board.tiles[from.0][from.1].piece.colour
+        {
             legal_moves.push(m);
         }
     }
@@ -265,7 +277,7 @@ pub fn legal_pawn_moves(
     return legal_moves;
 }
 
-pub fn pawn_swap(board: &mut Board, to: (usize, usize)) {
+pub fn pawn_swap(board: &mut Board, to: (usize, usize), is_white: bool) {
     let green = RGB(50, 150, 50);
     loop {
         println!(
@@ -299,7 +311,7 @@ pub fn pawn_swap(board: &mut Board, to: (usize, usize)) {
                 break;
             }
             _ => {
-                clear_draw(board);
+                clear_draw(board, is_white);
                 input_error(Error::OutOfBounds);
                 continue;
             }
