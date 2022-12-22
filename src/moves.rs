@@ -202,13 +202,15 @@ pub fn move_piece(
     if is_white {
         if board.tiles[to.0][to.1].piece.piece_type == Type::Pawn(true) {
             if to.0 == 0 || to.0 == 7 {
-                board.tiles[to.0][to.1].piece.piece_type = Type::Queen;
+                clear_draw(board, true);
+                pawn_swap(board, to, true);
             }
         }
     } else {
         if board.tiles[to.0][to.1].piece.piece_type == Type::Pawn(true) {
             if to.0 == 0 || to.0 == 7 {
-                board.tiles[to.0][to.1].piece.piece_type = Type::Queen;
+                clear_draw(board, false);
+                pawn_swap(board, to, false);
             }
         }
     }
