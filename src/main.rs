@@ -14,60 +14,80 @@ fn main() {
     stdin().read_line(&mut String::new()).unwrap();
 
     clear_draw(&mut board);
-    player_input(&mut board);
+    game_loop(&mut board);
 }
 
-fn player_input(board: &mut Board) {
+fn game_loop(board: &mut Board) {
     loop {
-        // White's turn
-        println!("White's Turn");
-        let (from, to) = handle_player(board, true);
-        let white_moves = legal_moves(board, from, true);
-        if white_moves.contains(&to) {
-            match move_piece(board, from, to, true) {
-                Err(e) => {
-                    clear_draw(board);
-                    input_error(e);
-                    continue;
-                }
-
-                Ok(_) => {
-                    clear_draw(board);
-                }
+        new_turn(board, true);
+        match who_got_checkmated(board) {
+            Some(Colour::White) => {
+                clear_draw(board);
+                arrow_print("Black Wins!", true);
+                break;
             }
-        } else {
-            clear_draw(board);
-            input_error(Error::IllegalMove);
-            continue;
+
+            Some(Colour::Black) => {
+                clear_draw(board);
+                arrow_print("White Wins!", true);
+                break;
+            }
+
+            None => {}
         }
 
-        // Black's turn
-        println!("Black's Turn");
-        let (from, to) = handle_player(board, false);
-        println!("{from:?} {to:?}");
-        println!("{:?}", board.tiles[from.0][from.1].piece.piece_type);
-        let black_moves = legal_moves(board, from, false);
-        if black_moves.contains(&to) {
-            match move_piece(board, from, to, false) {
+        new_turn(board, false);
+        match who_got_checkmated(board) {
+            Some(Colour::White) => {
+                clear_draw(board);
+                arrow_print("White Wins!", true);
+                break;
+            }
+
+            Some(Colour::Black) => {
+                clear_draw(board);
+                arrow_print("Black Wins!", true);
+                break;
+            }
+
+            None => {}
+        }
+    }
+
+    arrow_print("Hit Enter to exit . . .", true);
+    stdin().read_line(&mut String::new()).unwrap();
+}
+
+fn new_turn(board: &mut Board, is_white: bool) {
+    loop {
+        if is_white {
+            println!("White's Turn");
+        } else {
+            println!("Black's Turn");
+        }
+
+        let (from, to) = handle_input(board, is_white);
+        let white_moves = legal_moves(board, from, is_white);
+        if white_moves.contains(&to) {
+            match move_piece(board, from, to, is_white) {
                 Err(e) => {
                     clear_draw(board);
                     input_error(e);
-                    continue;
                 }
 
                 Ok(_) => {
                     clear_draw(board);
+                    return;
                 }
             }
         } else {
             clear_draw(board);
             input_error(Error::IllegalMove);
-            continue;
         }
     }
 }
 
-fn handle_player(board: &mut Board, is_white: bool) -> ((usize, usize), (usize, usize)) {
+fn handle_input(board: &mut Board, is_white: bool) -> ((usize, usize), (usize, usize)) {
     let colour;
     if is_white {
         colour = Colour::White;
