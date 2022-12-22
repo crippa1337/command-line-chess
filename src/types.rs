@@ -219,6 +219,15 @@ pub enum Colour {
     Black,
 }
 
+impl Colour {
+    pub fn ctos(&self) -> String {
+        match self {
+            Colour::White => "White".to_string(),
+            Colour::Black => "Black".to_string(),
+        }
+    }
+}
+
 pub enum Error {
     Length,
     Empty,

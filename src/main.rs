@@ -20,37 +20,17 @@ fn main() {
 fn game_loop(board: &mut Board) {
     loop {
         new_turn(board, true);
-        match who_got_checkmated(board) {
-            Some(Colour::White) => {
-                clear_draw(board);
-                arrow_print("Black Wins!", true);
-                break;
-            }
-
-            Some(Colour::Black) => {
-                clear_draw(board);
-                arrow_print("White Wins!", true);
-                break;
-            }
-
-            None => {}
+        if let Some(winner) = check_for_mates(board) {
+            clear_draw(board);
+            arrow_print(&format!("{} Wins!", winner.ctos()), true);
+            break;
         }
 
         new_turn(board, false);
-        match who_got_checkmated(board) {
-            Some(Colour::White) => {
-                clear_draw(board);
-                arrow_print("Black Wins!", true);
-                break;
-            }
-
-            Some(Colour::Black) => {
-                clear_draw(board);
-                arrow_print("White Wins!", true);
-                break;
-            }
-
-            None => {}
+        if let Some(winner) = check_for_mates(board) {
+            clear_draw(board);
+            arrow_print(&format!("{} Wins!", winner.ctos()), true);
+            break;
         }
     }
 
