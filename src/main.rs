@@ -40,13 +40,13 @@ fn game_loop(board: &mut Board) {
         match who_got_checkmated(board) {
             Some(Colour::White) => {
                 clear_draw(board);
-                arrow_print("White Wins!", true);
+                arrow_print("Black Wins!", true);
                 break;
             }
 
             Some(Colour::Black) => {
                 clear_draw(board);
-                arrow_print("Black Wins!", true);
+                arrow_print("White Wins!", true);
                 break;
             }
 
