@@ -267,7 +267,7 @@ fn sp_game_loop(mut board: Board) {
         break;
     }
 
-    for _ in 0..5 {
+    for _ in 0..3 {
         new_turn(&mut board, true, true);
 
         if let Some(winner) = check_for_mates(board) {
@@ -293,7 +293,7 @@ fn sp_game_loop(mut board: Board) {
 
             Ok(_) => {
                 clear_draw(board, true);
-                arrow_print("Computer is doing 5 random moves...", true)
+                arrow_print("Computer is doing one of it's 3 random moves...", true)
             }
         }
 
