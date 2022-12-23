@@ -6,7 +6,7 @@ Singleplayer will pit you versus a chess engine powered by a minimax algorithm.
 
 # To-do
 - [x] Checkmates
-- [ ] Main menu (choosing singleplayer or multiplayer)
-- [ ] Minimax algorithm for singleplayer
+- [x] Main menu (choosing singleplayer or multiplayer)
+- [x] Minimax algorithm for singleplayer
 - [ ] Castling and other "exotic" moves
 - [ ] Saving game states
