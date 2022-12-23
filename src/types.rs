@@ -214,19 +214,19 @@ impl Board {
     }
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Hash, Eq)]
 pub struct Tile {
     pub piece: Piece,
     pub colour: Colour,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
 pub struct Piece {
     pub piece_type: Type,
     pub colour: Colour,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
 pub enum Type {
     Empty,
     Pawn(bool),
@@ -237,7 +237,21 @@ pub enum Type {
     King,
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+impl Type {
+    pub fn ttos(&self) -> String {
+        match self {
+            Type::Empty => "Empty".to_string(),
+            Type::Pawn(_) => "Pawn".to_string(),
+            Type::Rook => "Rook".to_string(),
+            Type::Knight => "Knight".to_string(),
+            Type::Bishop => "Bishop".to_string(),
+            Type::Queen => "Queen".to_string(),
+            Type::King => "King".to_string(),
+        }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Debug, Hash, Eq)]
 pub enum Colour {
     White,
     Black,
