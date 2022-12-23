@@ -184,6 +184,8 @@ pub fn get_best_move(
 
     if pieces1 + pieces2 < 12 {
         depth += 1;
+    } else if pieces1 + pieces2 < 6 {
+        depth += 2;
     }
 
     for (from, to) in moves {
@@ -197,7 +199,7 @@ pub fn get_best_move(
 
             let score = -negamax(
                 new_board,
-                depth - 1,
+                depth,
                 -1000000,
                 1000000,
                 !is_white,
