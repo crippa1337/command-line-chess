@@ -1,4 +1,5 @@
 mod cpu;
+mod evalfunc;
 mod moves;
 mod types;
 use ansi_term::Colour::{Red, White, RGB};
@@ -73,7 +74,7 @@ fn pc_game_loop(mut board: Board) {
     arrow_print("4. Impossible", false);
     arrow_print("5. Unstoppable", false);
 
-    let mut difficulty = 0;
+    let mut difficulty;
     loop {
         let mut input = String::new();
         print!(">>> ");
@@ -209,7 +210,6 @@ fn pc_game_loop(mut board: Board) {
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
-        clear_draw(board, true);
         let to_piece = board.tiles[move_.1 .0][move_.1 .1].piece.piece_type;
         clear_draw(board, true);
         print!(
@@ -245,7 +245,7 @@ fn sp_game_loop(mut board: Board) {
     arrow_print("4. Impossible", false);
     arrow_print("5. Unstoppable", false);
 
-    let mut difficulty = 0;
+    let mut difficulty;
     loop {
         let mut input = String::new();
         print!(">>> ");
@@ -267,16 +267,14 @@ fn sp_game_loop(mut board: Board) {
         break;
     }
 
-    for _ in 0..3 {
-        new_turn(&mut board, true, true);
-
+    for _ in 0..2 {
         if let Some(winner) = check_for_mates(board) {
-            clear_draw(board, true);
+            clear_draw(board, false);
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
 
-        let mut all_moves = get_all_moves(board, false);
+        let mut all_moves = get_all_moves(board, true);
         all_moves.retain(|x| x.1.len() != 0);
         let move_ = &all_moves[fastrand::usize(0..all_moves.len())];
 
@@ -292,33 +290,34 @@ fn sp_game_loop(mut board: Board) {
             }
 
             Ok(_) => {
-                clear_draw(board, true);
-                arrow_print("Computer is doing one of it's 3 random moves...", true)
+                clear_draw(board, false);
+                arrow_print("Computer is doing one of it's 2 random moves...", true)
             }
         }
 
         if let Some(winner) = check_for_mates(board) {
-            clear_draw(board, true);
+            clear_draw(board, false);
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
+
+        new_turn(&mut board, false, true);
 
         std::thread::sleep(std::time::Duration::from_millis(1000));
     }
 
     // actual game loop
     loop {
-        new_turn(&mut board, true, false);
         if let Some(winner) = check_for_mates(board) {
-            clear_draw(board, true);
+            clear_draw(board, false);
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
 
         println!("{} Computer is thinking...", Red.bold().paint(">>>"));
         let black_start = std::time::Instant::now();
-        let move_ = cpu::get_best_move(board, difficulty as i32, false);
-        match move_piece(&mut board, move_.0, move_.1, false) {
+        let move_ = cpu::get_best_move(board, difficulty as i32, true);
+        match move_piece(&mut board, move_.0, move_.1, true) {
             Err(e) => {
                 clear_draw(board, false);
                 input_error(e);
@@ -328,20 +327,22 @@ fn sp_game_loop(mut board: Board) {
         }
 
         if let Some(winner) = check_for_mates(board) {
-            clear_draw(board, true);
+            clear_draw(board, false);
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
 
-        clear_draw(board, true);
+        clear_draw(board, false);
         let to_piece = board.tiles[move_.1 .0][move_.1 .1].piece.piece_type;
         print!(
-            "{} Black moved: {} to {} after {:?}\n",
+            "{} Computer moved: {} to {} after {:?}\n",
             Red.bold().paint(">>>"),
             Red.bold().paint(to_piece.ttos()),
             Red.bold().paint(reverse_match_input(move_.1)),
             black_start.elapsed()
         );
+
+        new_turn(&mut board, false, false);
     }
 }
 

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::*;
+use evalfunc::*;
 
 // get all the possible moves for a side, and return a vector with tuples of ((usize, usize), (usize, usize)) representing the from and to positions of the move
 pub fn get_all_moves(board: Board, is_white: bool) -> Vec<((usize, usize), Vec<(usize, usize)>)> {
@@ -31,13 +32,9 @@ pub fn get_all_moves(board: Board, is_white: bool) -> Vec<((usize, usize), Vec<(
     return moves;
 }
 
-// evaluate the board for a side
-// Pawns are 1, Knights are 3, Bishops are 3, Rooks are 5, Queens are 9
 pub fn evaluate_board(board: Board, is_white: bool) -> i32 {
     let mut white_score = 0;
     let mut black_score = 0;
-    let mut white_middle_score = 0;
-    let mut black_middle_score = 0;
 
     match check_for_mates(board.clone()) {
         Some(Colour::White) => {
@@ -54,7 +51,7 @@ pub fn evaluate_board(board: Board, is_white: bool) -> i32 {
                 return std::i32::MAX;
             }
         }
-        _ => {}
+        _ => (),
     }
 
     for i in 0..8 {
@@ -64,38 +61,31 @@ pub fn evaluate_board(board: Board, is_white: bool) -> i32 {
             }
 
             let piece_color = board.tiles[i][j].piece.colour;
-            let piece_value = match board.tiles[i][j].piece.piece_type {
-                Type::Pawn(_) => 1,
-                Type::Knight => 3,
-                Type::Bishop => 3,
-                Type::Rook => 5,
-                Type::Queen => 9,
-                _ => 0,
+            let (piece_value, positional_value) = match board.tiles[i][j].piece.piece_type {
+                Type::Pawn(_) => (6, pawn_positional_value(i, j, piece_color)),
+                Type::Knight => (18, knight_positional_value(i, j, piece_color)),
+                Type::Bishop => (
+                    18,
+                    bishop_positional_value(i, j, piece_color, board.clone()),
+                ),
+                Type::Rook => (30, rook_positional_value(i, j, piece_color, board.clone())),
+                Type::Queen => (52, queen_positional_value(i, j, piece_color, board.clone())),
+                _ => (0, 0),
             };
 
             if piece_color == Colour::White {
-                white_score += piece_value;
-
-                // If the piece is in the middle of the board, add a bonus to the score
-                if i > 2 && i < 5 && j > 2 && j < 5 {
-                    white_middle_score += 1;
-                }
+                white_score += piece_value + positional_value;
             } else {
-                black_score += piece_value;
-
-                // If the piece is in the middle of the board, add a bonus to the score
-                if i > 2 && i < 5 && j > 2 && j < 5 {
-                    black_middle_score += 1;
-                }
+                black_score += piece_value + positional_value;
             }
         }
     }
 
-    if is_white {
-        return white_score - black_score + white_middle_score - black_middle_score;
-    } else {
-        return black_score - white_score + black_middle_score - white_middle_score;
-    }
+    let material_balance = white_score - black_score;
+
+    let score = material_balance + passed_pawns_value(board.clone(), is_white);
+
+    return score;
 }
 
 // negamax algorithm with alpha-beta pruning
@@ -197,7 +187,7 @@ pub fn get_best_move(
                 Err(_) => continue,
             }
 
-            let score = -negamax(
+            let score = negamax(
                 new_board,
                 depth,
                 -1000000,
