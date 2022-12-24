@@ -266,6 +266,7 @@ impl Colour {
     }
 }
 
+#[derive(Debug)]
 pub enum Error {
     Length,
     Empty,

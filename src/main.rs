@@ -1,9 +1,9 @@
-mod cpu;
-mod evalfunc;
+mod engine;
+mod evaluation;
 mod moves;
 mod types;
 use ansi_term::Colour::{Red, White, RGB};
-use cpu::get_all_moves;
+use engine::get_all_moves;
 use moves::*;
 use std::io::{stdin, Write};
 use types::*;
@@ -14,7 +14,7 @@ fn main() {
     arrow_print("Welcome to C-Chess!", true);
     arrow_print("Input 'exit' to exit the application at anytime.", false);
     arrow_print(
-        "What do you want to play?\n\n(1) Local Multiplayer\n(2) Computer vs Computer\n(3) Singleplayer vs Computer\n",
+        "What do you want to play?\n\n(1) Local Multiplayer\n(2) Singleplayer vs Computer\n(3) Computer vs Computer\n",
         false,
     );
 
@@ -26,8 +26,8 @@ fn main() {
 
         match input.trim().parse::<usize>().unwrap() {
             1 => mp_game_loop(board),
-            2 => pc_game_loop(board),
-            3 => sp_game_loop(board),
+            2 => sp_game_loop(board),
+            3 => pc_game_loop(board),
             _ => {
                 arrow_print("Invalid input!", true);
                 continue;
@@ -39,23 +39,24 @@ fn main() {
 fn mp_game_loop(mut board: Board) {
     clear_draw(board, true);
     loop {
-        new_turn(&mut board, true, true);
+        new_turn(&mut board, true);
         if let Some(winner) = check_for_mates(board) {
             clear_draw(board, true);
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
 
-        new_turn(&mut board, false, true);
+        new_turn(&mut board, false);
         if let Some(winner) = check_for_mates(board) {
             clear_draw(board, false);
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
     }
-
-    arrow_print("Hit Enter to exit . . .", true);
-    stdin().read_line(&mut String::new()).unwrap();
+    arrow_print("Press Enter to exit.", true);
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+    main();
 }
 
 fn pc_game_loop(mut board: Board) {
@@ -102,7 +103,7 @@ fn pc_game_loop(mut board: Board) {
     let mut black_stalemate = 0;
 
     // make 5 random moves to make the game more interesting
-    for _ in 0..5 {
+    for _ in 0..3 {
         // use fastrand crate for randomness
         let mut all_moves = get_all_moves(board, true);
         all_moves.retain(|x| x.1.len() != 0);
@@ -121,7 +122,7 @@ fn pc_game_loop(mut board: Board) {
 
             Ok(_) => {
                 clear_draw(board, true);
-                arrow_print("Doing 10 random moves...", true)
+                arrow_print("Doing 6 random moves...", true)
             }
         }
 
@@ -144,7 +145,7 @@ fn pc_game_loop(mut board: Board) {
 
             Ok(_) => {
                 clear_draw(board, true);
-                arrow_print("Doing 10 random moves...", true)
+                arrow_print("Doing 6 random moves...", true)
             }
         }
 
@@ -153,7 +154,7 @@ fn pc_game_loop(mut board: Board) {
 
     loop {
         let white_start = std::time::Instant::now();
-        let move_ = cpu::get_best_move(board, difficulty as i32, true);
+        let move_ = engine::max_move(board, difficulty as i32);
         match move_piece(&mut board, move_.0, move_.1, true) {
             Err(e) => {
                 clear_draw(board, true);
@@ -190,7 +191,7 @@ fn pc_game_loop(mut board: Board) {
             break;
         }
         let black_start = std::time::Instant::now();
-        let move_ = cpu::get_best_move(board, difficulty as i32, false);
+        let move_ = engine::min_move(board, difficulty as i32);
         match move_piece(&mut board, move_.0, move_.1, false) {
             Err(e) => {
                 clear_draw(board, false);
@@ -227,23 +228,26 @@ fn pc_game_loop(mut board: Board) {
             break;
         }
     }
+
+    arrow_print("Press Enter to exit.", true);
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+    main();
 }
 
 fn sp_game_loop(mut board: Board) {
-    arrow_print("What difficulty do you want to play at?", true);
+    clear_screen();
+    arrow_print("What depth do you want to play at?", true);
     arrow_print(
-        "The higher the difficulty, the longer the computer will think",
+        "The higher the depth, the longer the engine (called Magnus) will think",
         true,
     );
-    arrow_print(
-        "A difficulty higher than 4 will result in long turns!",
-        true,
-    );
-    arrow_print("1. Easy", false);
-    arrow_print("2. Medium", false);
-    arrow_print("3. Hard", false);
-    arrow_print("4. Impossible", false);
-    arrow_print("5. Unstoppable", false);
+    arrow_print("A depth higher than 4 will result in long turns!", true);
+    arrow_print("1. ", false);
+    arrow_print("2. ", false);
+    arrow_print("3. ", false);
+    arrow_print("4. <<< Recommended", false);
+    arrow_print("5. ", false);
 
     let mut difficulty;
     loop {
@@ -267,91 +271,73 @@ fn sp_game_loop(mut board: Board) {
         break;
     }
 
-    for _ in 0..2 {
-        if let Some(winner) = check_for_mates(board) {
-            clear_draw(board, false);
-            arrow_print(&format!("{} Wins!", winner.ctos()), true);
-            break;
-        }
-
-        let mut all_moves = get_all_moves(board, true);
-        all_moves.retain(|x| x.1.len() != 0);
-        let move_ = &all_moves[fastrand::usize(0..all_moves.len())];
-
-        match move_piece(
-            &mut board,
-            move_.0,
-            move_.1[fastrand::usize(..move_.1.len())],
-            true,
-        ) {
-            Err(e) => {
-                clear_draw(board, true);
-                input_error(e);
-            }
-
-            Ok(_) => {
-                clear_draw(board, false);
-                arrow_print("Computer is doing one of it's 2 random moves...", true)
-            }
-        }
-
-        if let Some(winner) = check_for_mates(board) {
-            clear_draw(board, false);
-            arrow_print(&format!("{} Wins!", winner.ctos()), true);
-            break;
-        }
-
-        new_turn(&mut board, false, true);
-
-        std::thread::sleep(std::time::Duration::from_millis(1000));
-    }
-
     // actual game loop
+    let list_of_replies: [&str; 11] = [
+        "This looks like a good move!",
+        "I think I'll do this...",
+        "What about...",
+        "Taste this!",
+        "Now this is getting interesting.",
+        "I'm not sure about this one, what do you think?",
+        "This is a risky move, but it might pay off.",
+        "I have a good feeling about this move.",
+        "Let's see how this plays out...",
+        "I'm feeling confident about this one.",
+        "This might be a long shot, but it's worth a try.",
+    ];
+
+    clear_draw(board, true);
     loop {
+        new_turn(&mut board, true);
+
         if let Some(winner) = check_for_mates(board) {
-            clear_draw(board, false);
+            clear_draw(board, true);
             arrow_print(&format!("{} Wins!", winner.ctos()), true);
             break;
         }
 
-        println!("{} Computer is thinking...", Red.bold().paint(">>>"));
+        println!("{} Magnus is thinking...", Red.bold().paint(">>>"));
         let black_start = std::time::Instant::now();
-        let move_ = cpu::get_best_move(board, difficulty as i32, true);
+        let move_ = engine::min_move(board, difficulty as i32);
         match move_piece(&mut board, move_.0, move_.1, true) {
             Err(e) => {
-                clear_draw(board, false);
+                clear_draw(board, true);
                 input_error(e);
             }
 
             Ok(_) => {}
         }
 
-        if let Some(winner) = check_for_mates(board) {
-            clear_draw(board, false);
-            arrow_print(&format!("{} Wins!", winner.ctos()), true);
-            break;
-        }
-
-        clear_draw(board, false);
+        clear_draw(board, true);
         let to_piece = board.tiles[move_.1 .0][move_.1 .1].piece.piece_type;
+        let random_reply = fastrand::usize(..11);
+        println!(
+            "{} {}",
+            Red.bold().paint(">>>"),
+            White.bold().paint(list_of_replies[random_reply])
+        );
         print!(
-            "{} Computer moved: {} to {} after {:?}\n",
+            "{} Magnus moved: {} to {} after {:?}\n",
             Red.bold().paint(">>>"),
             Red.bold().paint(to_piece.ttos()),
             Red.bold().paint(reverse_match_input(move_.1)),
             black_start.elapsed()
         );
 
-        new_turn(&mut board, false, false);
+        if let Some(winner) = check_for_mates(board) {
+            clear_draw(board, true);
+            arrow_print(&format!("{} Wins!", winner.ctos()), true);
+            break;
+        }
     }
+    arrow_print("Press Enter to exit.", true);
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+    main();
 }
 
-fn new_turn(board: &mut Board, is_white: bool, clear: bool) {
+fn new_turn(board: &mut Board, is_white: bool) {
     loop {
-        if clear {
-            clear_draw(*board, is_white)
-        }
-
         if is_white {
             println!("White's Turn");
         } else {
@@ -368,7 +354,7 @@ fn new_turn(board: &mut Board, is_white: bool, clear: bool) {
                 }
 
                 Ok(_) => {
-                    clear_draw(*board, is_white);
+                    clear_draw(*board, !is_white);
                     return;
                 }
             }

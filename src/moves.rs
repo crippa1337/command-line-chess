@@ -1,43 +1,22 @@
 use crate::*;
 
 pub fn is_in_check(board: Board, is_white: bool) -> bool {
-    // Find all the positions of the opponent's pieces
-    let mut opponent_positions = Vec::new();
-    for i in 0..8 {
-        for j in 0..8 {
-            // Do not check empty tiles
-            if board.tiles[i][j].piece.piece_type == Type::Empty {
-                continue;
-            }
+    // Get all opponent's moves
+    let moves = get_all_moves(board, !is_white);
 
-            if is_white {
-                if board.tiles[i][j].piece.colour == Colour::Black {
-                    opponent_positions.push((i, j));
-                }
-            } else {
-                if board.tiles[i][j].piece.colour == Colour::White {
-                    opponent_positions.push((i, j));
-                }
-            }
-        }
-    }
-
-    // Generate all the possible moves for the opponent's pieces
-    let mut opponent_moves = Vec::new();
-    for pos in opponent_positions {
-        opponent_moves.append(&mut legal_moves(board, pos, !is_white));
-    }
-
+    // Get the king's position
     let king_pos = if is_white {
         board.kingpos_w
     } else {
         board.kingpos_b
     };
 
-    // Check if any of the opponent's moves will capture the king
-    for moves in opponent_moves {
-        if moves == king_pos {
-            return true;
+    // Check if any of the opponent's moves are the king's position
+    for m in moves {
+        for to in m.1 {
+            if to == king_pos {
+                return true;
+            }
         }
     }
 
@@ -78,14 +57,15 @@ pub fn check_for_mates(board: Board) -> Option<Colour> {
     // If none of the moves will remove the king from check, return winner
     // Check if white king is in checkmate
     if is_in_check(board, true) {
+        let test_board = board.clone();
         for i in 0..8 {
             for j in 0..8 {
-                let mut test_board = board.clone();
                 if test_board.tiles[i][j].piece.piece_type == Type::Empty {
                     continue;
                 }
 
                 if test_board.tiles[i][j].piece.colour == Colour::White {
+                    let mut test_board = board.clone();
                     let moves = legal_moves(test_board, (i, j), true);
                     for m in moves {
                         match move_piece(&mut test_board, (i, j), m, true) {
@@ -106,14 +86,15 @@ pub fn check_for_mates(board: Board) -> Option<Colour> {
 
     // Check if black king is in checkmate
     if is_in_check(board, false) {
+        let test_board = board.clone();
         for i in 0..8 {
             for j in 0..8 {
-                let mut test_board = board.clone();
                 if test_board.tiles[i][j].piece.piece_type == Type::Empty {
                     continue;
                 }
 
                 if test_board.tiles[i][j].piece.colour == Colour::Black {
+                    let mut test_board = board.clone();
                     let moves = legal_moves(test_board, (i, j), false);
                     for m in moves {
                         match move_piece(&mut test_board, (i, j), m, false) {
@@ -209,10 +190,15 @@ pub fn legal_pawn_moves(board: Board, from: (usize, usize), is_white: bool) -> V
     if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(false) {
         if is_white {
             possible_moves.push((from.0.wrapping_sub(1), from.1));
-            possible_moves.push((from.0.wrapping_sub(2), from.1));
+            // Only push the second move if the first move is legal
+            if board.tiles[from.0.wrapping_sub(2)][from.1].piece.piece_type != Type::Empty {
+                possible_moves.push((from.0.wrapping_sub(2), from.1));
+            }
         } else {
             possible_moves.push((from.0.wrapping_add(1), from.1));
-            possible_moves.push((from.0.wrapping_add(2), from.1));
+            if board.tiles[from.0.wrapping_add(2)][from.1].piece.piece_type != Type::Empty {
+                possible_moves.push((from.0.wrapping_add(2), from.1));
+            }
         }
     } else if board.tiles[from.0][from.1].piece.piece_type == Type::Pawn(true) {
         if is_white {
