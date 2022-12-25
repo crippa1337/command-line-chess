@@ -30,7 +30,7 @@ pub fn legal_moves(board: Board, from: (usize, usize), is_white: bool) -> Vec<(u
         Type::Pawn(_) => {
             legal_moves.append(&mut legal_pawn_moves(board, from, is_white));
         }
-        Type::Rook => {
+        Type::Rook(_) => {
             legal_moves.append(&mut legal_straight_moves(board, from, is_white));
         }
         Type::Knight => {
@@ -43,7 +43,7 @@ pub fn legal_moves(board: Board, from: (usize, usize), is_white: bool) -> Vec<(u
             legal_moves.append(&mut legal_straight_moves(board, from, is_white));
             legal_moves.append(&mut legal_diagonal_moves(board, from, is_white));
         }
-        Type::King => {
+        Type::King(_) => {
             legal_moves.append(&mut legal_king_moves(board, from, is_white));
         }
         Type::Empty => unreachable!(),
@@ -57,17 +57,16 @@ pub fn check_for_mates(board: Board) -> Option<Colour> {
     // If none of the moves will remove the king from check, return winner
     // Check if white king is in checkmate
     if is_in_check(board, true) {
-        let test_board = board.clone();
         for i in 0..8 {
             for j in 0..8 {
-                if test_board.tiles[i][j].piece.piece_type == Type::Empty {
+                if board.tiles[i][j].piece.piece_type == Type::Empty {
                     continue;
                 }
 
-                if test_board.tiles[i][j].piece.colour == Colour::White {
-                    let mut test_board = board.clone();
-                    let moves = legal_moves(test_board, (i, j), true);
+                if board.tiles[i][j].piece.colour == Colour::White {
+                    let moves = legal_moves(board, (i, j), true);
                     for m in moves {
+                        let mut test_board = board.clone();
                         match move_piece(&mut test_board, (i, j), m, true) {
                             Ok(_) => {
                                 if !is_in_check(test_board, true) {
@@ -86,17 +85,16 @@ pub fn check_for_mates(board: Board) -> Option<Colour> {
 
     // Check if black king is in checkmate
     if is_in_check(board, false) {
-        let test_board = board.clone();
         for i in 0..8 {
             for j in 0..8 {
-                if test_board.tiles[i][j].piece.piece_type == Type::Empty {
+                if board.tiles[i][j].piece.piece_type == Type::Empty {
                     continue;
                 }
 
-                if test_board.tiles[i][j].piece.colour == Colour::Black {
-                    let mut test_board = board.clone();
-                    let moves = legal_moves(test_board, (i, j), false);
+                if board.tiles[i][j].piece.colour == Colour::Black {
+                    let moves = legal_moves(board, (i, j), false);
                     for m in moves {
+                        let mut test_board = board.clone();
                         match move_piece(&mut test_board, (i, j), m, false) {
                             Ok(_) => {
                                 if !is_in_check(test_board, false) {
@@ -127,14 +125,35 @@ pub fn move_piece(
 
     // Make the move on the test board
     match test_board.tiles[from.0][from.1].piece.piece_type {
-        Type::King => {
+        Type::King(false) => {
+            test_board.tiles[from.0][from.1].piece.piece_type = Type::King(true);
+        }
+        Type::King(_) => {
             if is_white {
                 test_board.kingpos_w = to;
             } else {
                 test_board.kingpos_b = to;
             }
         }
+
+        Type::Pawn(false) => {
+            test_board.tiles[from.0][from.1].piece.piece_type = Type::Pawn(true);
+        }
+        Type::Rook(false) => {
+            test_board.tiles[from.0][from.1].piece.piece_type = Type::Rook(true);
+        }
         _ => (),
+    }
+
+    // Castling
+    if board.tiles[from.0][from.1].piece.piece_type == Type::King(false) {
+        if to.1 == 1 {
+            test_board.tiles[from.0][0].piece.piece_type = Type::Empty;
+            test_board.tiles[from.0][3].piece.piece_type = Type::Rook(true);
+        } else if to.1 == 6 {
+            test_board.tiles[from.0][7].piece.piece_type = Type::Empty;
+            test_board.tiles[from.0][5].piece.piece_type = Type::Rook(true);
+        }
     }
     test_board.tiles[to.0][to.1].piece = test_board.tiles[from.0][from.1].piece;
     test_board.tiles[from.0][from.1].piece.piece_type = Type::Empty;
@@ -145,21 +164,38 @@ pub fn move_piece(
     }
 
     // Actually do the move if king isn't in check
-    // Pawn has moved -> true if false
-    // King has moved -> new king pos
+    // Castling
+    if board.tiles[from.0][from.1].piece.piece_type == Type::King(false) {
+        if to.1 == 2 {
+            board.tiles[from.0][0].piece.piece_type = Type::Empty;
+            board.tiles[from.0][3].piece.piece_type = Type::Rook(true);
+        } else if to.1 == 6 {
+            board.tiles[from.0][7].piece.piece_type = Type::Empty;
+            board.tiles[from.0][5].piece.piece_type = Type::Rook(true);
+        }
+    }
+
     match board.tiles[from.0][from.1].piece.piece_type {
-        Type::King => {
+        Type::King(false) => {
+            board.tiles[from.0][from.1].piece.piece_type = Type::King(true);
+        }
+        Type::King(_) => {
             if is_white {
                 board.kingpos_w = to;
             } else {
                 board.kingpos_b = to;
             }
         }
+
         Type::Pawn(false) => {
             board.tiles[from.0][from.1].piece.piece_type = Type::Pawn(true);
         }
+        Type::Rook(false) => {
+            board.tiles[from.0][from.1].piece.piece_type = Type::Rook(true);
+        }
         _ => (),
     }
+
     board.tiles[to.0][to.1].piece = board.tiles[from.0][from.1].piece;
     board.tiles[from.0][from.1].piece.piece_type = Type::Empty;
 
@@ -273,7 +309,7 @@ pub fn pawn_swap(mut board: Board, to: (usize, usize), is_white: bool) {
                 break;
             }
             "4" => {
-                board.tiles[to.0][to.1].piece.piece_type = Type::Rook;
+                board.tiles[to.0][to.1].piece.piece_type = Type::Rook(true);
                 break;
             }
             _ => {
@@ -478,6 +514,36 @@ pub fn legal_king_moves(board: Board, from: (usize, usize), is_white: bool) -> V
         } else {
             legal_move_list.push((possible_move.0 as usize, possible_move.1 as usize));
         }
+    }
+
+    // Castling
+    let king_pos: (usize, usize);
+    if is_white {
+        king_pos = board.kingpos_w;
+    } else {
+        king_pos = board.kingpos_b;
+    };
+
+    // Do not check castlings if king has moved
+    if board.tiles[king_pos.0][king_pos.1].piece.piece_type == Type::King(true) {
+        return legal_move_list;
+    }
+
+    // Castling to the left
+    if board.tiles[king_pos.0][king_pos.1 - 1].piece.piece_type == Type::Empty
+        && board.tiles[king_pos.0][king_pos.1 - 2].piece.piece_type == Type::Empty
+        && board.tiles[king_pos.0][king_pos.1 - 3].piece.piece_type == Type::Empty
+        && board.tiles[king_pos.0][king_pos.1 - 4].piece.piece_type == Type::Rook(false)
+    {
+        legal_move_list.push((king_pos.0, king_pos.1 - 2));
+    }
+
+    // Castling to the right
+    if board.tiles[king_pos.0][king_pos.1 + 1].piece.piece_type == Type::Empty
+        && board.tiles[king_pos.0][king_pos.1 + 2].piece.piece_type == Type::Empty
+        && board.tiles[king_pos.0][king_pos.1 + 3].piece.piece_type == Type::Rook(false)
+    {
+        legal_move_list.push((king_pos.0, king_pos.1 + 2));
     }
 
     return legal_move_list;

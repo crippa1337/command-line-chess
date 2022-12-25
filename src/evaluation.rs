@@ -30,9 +30,9 @@ pub fn evaluate_board(board: Board) -> i32 {
                     Type::Pawn(_) => 100,
                     Type::Knight => 320,
                     Type::Bishop => 330,
-                    Type::Rook => 500,
+                    Type::Rook(_) => 500,
                     Type::Queen => 900,
-                    Type::King => 20000,
+                    Type::King(_) => 20000,
                     _ => 0,
                 };
 
@@ -41,9 +41,9 @@ pub fn evaluate_board(board: Board) -> i32 {
                         Type::Pawn(_) => PAWN_TABLE[row][col],
                         Type::Knight => KNIGHT_TABLE[row][col],
                         Type::Bishop => BISHOP_TABLE[row][col],
-                        Type::Rook => ROOK_TABLE[row][col],
+                        Type::Rook(_) => ROOK_TABLE[row][col],
                         Type::Queen => QUEEN_TABLE[row][col],
-                        Type::King => KING_TABLE[row][col],
+                        Type::King(_) => KING_TABLE[row][col],
                         _ => 0,
                     };
 
@@ -53,9 +53,9 @@ pub fn evaluate_board(board: Board) -> i32 {
                         Type::Pawn(_) => PAWN_TABLE[7 - row][col],
                         Type::Knight => KNIGHT_TABLE[7 - row][col],
                         Type::Bishop => BISHOP_TABLE[7 - row][col],
-                        Type::Rook => ROOK_TABLE[7 - row][col],
+                        Type::Rook(_) => ROOK_TABLE[7 - row][col],
                         Type::Queen => QUEEN_TABLE[7 - row][col],
-                        Type::King => KING_TABLE[7 - row][col],
+                        Type::King(_) => KING_TABLE[7 - row][col],
                         _ => 0,
                     };
 

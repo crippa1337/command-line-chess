@@ -44,22 +44,22 @@ impl Board {
 
         // Rooks
         board[0][0].piece = Piece {
-            piece_type: Type::Rook,
+            piece_type: Type::Rook(false),
             colour: Colour::Black,
         };
 
         board[0][7].piece = Piece {
-            piece_type: Type::Rook,
+            piece_type: Type::Rook(false),
             colour: Colour::Black,
         };
 
         board[7][0].piece = Piece {
-            piece_type: Type::Rook,
+            piece_type: Type::Rook(false),
             colour: Colour::White,
         };
 
         board[7][7].piece = Piece {
-            piece_type: Type::Rook,
+            piece_type: Type::Rook(false),
             colour: Colour::White,
         };
 
@@ -121,12 +121,12 @@ impl Board {
         // Kings
 
         board[0][4].piece = Piece {
-            piece_type: Type::King,
+            piece_type: Type::King(false),
             colour: Colour::Black,
         };
 
         board[7][4].piece = Piece {
-            piece_type: Type::King,
+            piece_type: Type::King(false),
             colour: Colour::White,
         };
 
@@ -180,7 +180,7 @@ impl Board {
                         Colour::Black => print!("{}", brown.bold().paint("♙")),
                         Colour::White => print!("{}", White.bold().paint("♙")),
                     },
-                    Type::Rook => match tile.piece.colour {
+                    Type::Rook(_) => match tile.piece.colour {
                         Colour::Black => print!("{}", brown.bold().paint("♖")),
                         Colour::White => print!("{}", White.bold().paint("♜")),
                     },
@@ -196,7 +196,7 @@ impl Board {
                         Colour::Black => print!("{}", brown.bold().paint("♕")),
                         Colour::White => print!("{}", White.bold().paint("♛")),
                     },
-                    Type::King => match tile.piece.colour {
+                    Type::King(_) => match tile.piece.colour {
                         Colour::Black => print!("{}", brown.bold().paint("♔")),
                         Colour::White => print!("{}", White.bold().paint("♚")),
                     },
@@ -230,11 +230,11 @@ pub struct Piece {
 pub enum Type {
     Empty,
     Pawn(bool),
-    Rook,
+    Rook(bool),
     Knight,
     Bishop,
     Queen,
-    King,
+    King(bool),
 }
 
 impl Type {
@@ -242,11 +242,11 @@ impl Type {
         match self {
             Type::Empty => "Empty".to_string(),
             Type::Pawn(_) => "Pawn".to_string(),
-            Type::Rook => "Rook".to_string(),
+            Type::Rook(_) => "Rook".to_string(),
             Type::Knight => "Knight".to_string(),
             Type::Bishop => "Bishop".to_string(),
             Type::Queen => "Queen".to_string(),
-            Type::King => "King".to_string(),
+            Type::King(_) => "King".to_string(),
         }
     }
 }
