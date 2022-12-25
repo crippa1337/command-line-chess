@@ -127,6 +127,11 @@ pub fn move_piece(
     match test_board.tiles[from.0][from.1].piece.piece_type {
         Type::King(false) => {
             test_board.tiles[from.0][from.1].piece.piece_type = Type::King(true);
+            if is_white {
+                test_board.kingpos_w = to;
+            } else {
+                test_board.kingpos_b = to;
+            }
         }
         Type::King(_) => {
             if is_white {
@@ -178,6 +183,11 @@ pub fn move_piece(
     match board.tiles[from.0][from.1].piece.piece_type {
         Type::King(false) => {
             board.tiles[from.0][from.1].piece.piece_type = Type::King(true);
+            if is_white {
+                board.kingpos_w = to;
+            } else {
+                board.kingpos_b = to;
+            }
         }
         Type::King(_) => {
             if is_white {
