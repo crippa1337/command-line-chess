@@ -108,7 +108,9 @@ pub fn max_move(board: Board, depth: i32) -> ((usize, usize), (usize, usize)) {
             let eval = minimax(new_board, depth - 1, std::i32::MIN, std::i32::MAX, false);
             if eval > max_eval {
                 max_eval = eval;
-                best_move = (from, to_pos);
+                if board.tiles[from.0][from.1].piece.piece_type != Type::Empty {
+                    best_move = (from, to_pos);
+                }
             }
         }
     }
@@ -135,10 +137,13 @@ pub fn min_move(board: Board, depth: i32) -> ((usize, usize), (usize, usize)) {
             let eval = minimax(new_board, depth - 1, std::i32::MIN, std::i32::MAX, true);
             if eval < min_eval {
                 min_eval = eval;
-                best_move = (from, to_pos);
+                if board.tiles[from.0][from.1].piece.piece_type != Type::Empty {
+                    best_move = (from, to_pos);
+                }
             }
         }
     }
 
+    println!("Best move: {:?} with score: {}", best_move, min_eval);
     return best_move;
 }
