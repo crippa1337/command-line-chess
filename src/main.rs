@@ -14,6 +14,12 @@ fn main() {
     arrow_print("Welcome to C-Chess!", true);
     arrow_print("Input 'exit' to exit the application at anytime.", false);
     arrow_print(
+        "Input is taken as such: <LETTER><NUMBER><LETTER><NUMBER>",
+        true,
+    );
+    arrow_print("Alternatively interpreted as: <FROM><TO>", true);
+    arrow_print("Examples: a1a8, B1b2, c2f2", true);
+    arrow_print(
         "What do you want to play?\n\n(1) Local Multiplayer\n(2) Singleplayer vs Computer\n(3) Computer vs Computer\n",
         false,
     );
@@ -69,11 +75,11 @@ fn pc_game_loop(mut board: Board) {
         "A difficulty higher than 4 will result in long turns!",
         true,
     );
-    arrow_print("1. Easy", false);
-    arrow_print("2. Medium", false);
-    arrow_print("3. Hard", false);
-    arrow_print("4. Impossible", false);
-    arrow_print("5. Unstoppable", false);
+    arrow_print("1. ", false);
+    arrow_print("2. ", false);
+    arrow_print("3. <-- Fast games", false);
+    arrow_print("4. <-- Recommended", false);
+    arrow_print("5. ", false);
 
     let mut difficulty;
     loop {
@@ -289,6 +295,8 @@ fn sp_game_loop(mut board: Board) {
     clear_draw(board, true);
     loop {
         new_turn(&mut board, true);
+        // TODO: fix
+        clear_draw(board, true);
 
         if let Some(winner) = check_for_mates(board) {
             clear_draw(board, true);
