@@ -162,12 +162,11 @@ fn pc_game_loop(mut board: Board) {
         let white_start = std::time::Instant::now();
         let move_ = engine::max_move(board, difficulty as i32);
         match move_piece(&mut board, move_.0, move_.1, true) {
-            Err(e) => {
-                clear_draw(board, true);
-                input_error(e);
-            }
+            Err(_) => {}
 
-            Ok(_) => {}
+            Ok(_) => {
+                clear_draw(board, true);
+            }
         }
         if move_.1 == last_white_move {
             white_stalemate += 1;
@@ -182,7 +181,6 @@ fn pc_game_loop(mut board: Board) {
             break;
         }
         let to_piece = board.tiles[move_.1 .0][move_.1 .1].piece.piece_type;
-        clear_draw(board, true);
         print!(
             "{} White moved: {} to {} after {:?}\n",
             Red.bold().paint(">>>"),
@@ -199,12 +197,11 @@ fn pc_game_loop(mut board: Board) {
         let black_start = std::time::Instant::now();
         let move_ = engine::min_move(board, difficulty as i32);
         match move_piece(&mut board, move_.0, move_.1, false) {
-            Err(e) => {
-                clear_draw(board, false);
-                input_error(e);
-            }
+            Err(_) => {}
 
-            Ok(_) => {}
+            Ok(_) => {
+                clear_draw(board, true);
+            }
         }
         if move_.1 == last_black_move {
             black_stalemate += 1;
@@ -218,7 +215,6 @@ fn pc_game_loop(mut board: Board) {
             break;
         }
         let to_piece = board.tiles[move_.1 .0][move_.1 .1].piece.piece_type;
-        clear_draw(board, true);
         print!(
             "{} Black moved: {} to {} after {:?}\n",
             Red.bold().paint(">>>"),
@@ -277,7 +273,6 @@ fn sp_game_loop(mut board: Board) {
         break;
     }
 
-    // actual game loop
     let list_of_replies: [&str; 11] = [
         "This looks like a good move!",
         "I think I'll do this...",
@@ -293,6 +288,7 @@ fn sp_game_loop(mut board: Board) {
     ];
 
     clear_draw(board, true);
+    // actual game loop
     loop {
         new_turn(&mut board, true);
         // TODO: fix
