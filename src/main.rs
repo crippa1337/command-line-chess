@@ -303,11 +303,8 @@ fn sp_game_loop(mut board: Board) {
         println!("{} Magnus is thinking...", Red.bold().paint(">>>"));
         let black_start = std::time::Instant::now();
         let move_ = engine::min_move(board, difficulty as i32);
-        match move_piece(&mut board, move_.0, move_.1, true) {
-            Err(e) => {
-                clear_draw(board, true);
-                input_error(e);
-            }
+        match move_piece(&mut board, move_.0, move_.1, false) {
+            Err(_) => {}
 
             Ok(_) => {}
         }
