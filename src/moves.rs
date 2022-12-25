@@ -191,12 +191,12 @@ pub fn legal_pawn_moves(board: Board, from: (usize, usize), is_white: bool) -> V
         if is_white {
             possible_moves.push((from.0.wrapping_sub(1), from.1));
             // Only push the second move if the first move is legal
-            if board.tiles[from.0.wrapping_sub(2)][from.1].piece.piece_type != Type::Empty {
+            if board.tiles[from.0.wrapping_sub(1)][from.1].piece.piece_type == Type::Empty {
                 possible_moves.push((from.0.wrapping_sub(2), from.1));
             }
         } else {
             possible_moves.push((from.0.wrapping_add(1), from.1));
-            if board.tiles[from.0.wrapping_add(2)][from.1].piece.piece_type != Type::Empty {
+            if board.tiles[from.0.wrapping_add(1)][from.1].piece.piece_type == Type::Empty {
                 possible_moves.push((from.0.wrapping_add(2), from.1));
             }
         }
