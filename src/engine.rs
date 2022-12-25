@@ -129,6 +129,9 @@ pub fn min_move(board: Board, depth: i32) -> ((usize, usize), (usize, usize)) {
     for (from, to) in moves {
         for to_pos in to {
             let mut new_board = board.clone();
+            if board.tiles[from.0][from.1].piece.piece_type == Type::Empty {
+                continue;
+            }
             match move_piece(&mut new_board, from, to_pos, false) {
                 Ok(_) => (),
                 Err(_) => continue,
@@ -137,9 +140,7 @@ pub fn min_move(board: Board, depth: i32) -> ((usize, usize), (usize, usize)) {
             let eval = minimax(new_board, depth - 1, std::i32::MIN, std::i32::MAX, true);
             if eval < min_eval {
                 min_eval = eval;
-                if board.tiles[from.0][from.1].piece.piece_type != Type::Empty {
-                    best_move = (from, to_pos);
-                }
+                best_move = (from, to_pos);
             }
         }
     }
