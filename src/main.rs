@@ -273,7 +273,7 @@ fn sp_game_loop(mut board: Board) {
         break;
     }
 
-    let list_of_replies: [&str; 11] = [
+    let list_of_replies: [&str; 14] = [
         "This looks like a good move!",
         "I think I'll do this...",
         "What about...",
@@ -285,6 +285,9 @@ fn sp_game_loop(mut board: Board) {
         "Let's see how this plays out...",
         "I'm feeling confident about this one.",
         "This might be a long shot, but it's worth a try.",
+        "I mean, I don't mind.",
+        "You have to know this!",
+        "Can you see it?",
     ];
 
     clear_draw(board, true);
@@ -311,7 +314,7 @@ fn sp_game_loop(mut board: Board) {
 
         clear_draw(board, true);
         let to_piece = board.tiles[move_.1 .0][move_.1 .1].piece.piece_type;
-        let random_reply = fastrand::usize(..11);
+        let random_reply = fastrand::usize(..list_of_replies.len());
         println!(
             "{} {}",
             Red.bold().paint(">>>"),
